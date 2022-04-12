@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+# This is just a shortcut for the actual executable
+bin/game "$@"
