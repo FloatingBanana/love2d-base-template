@@ -3,6 +3,8 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
     require("lldebugger").start()
 end
 
+NULLFUNC = function()end
+
 -- Aliases
 lg = love.graphics
 la = love.audio
