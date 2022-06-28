@@ -21,6 +21,8 @@ Object = require "libs.classic.classic"
 Bump = require "libs.bump"
 Anim8 = require "libs.anim8"
 
+Utils = require "engine.utils"
+
 -- Misc
 local Game = require "states.Game"
 
