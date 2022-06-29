@@ -20,6 +20,7 @@ Lume = require "libs.lume"
 Object = require "libs.classic.classic"
 Bump = require "libs.bump"
 Anim8 = require "libs.anim8"
+Concord = require "libs.concord"
 
 Utils = require "engine.utils"
 
@@ -28,7 +29,6 @@ local Game = require "states.Game"
 
 function love.load(args)
     GS.registerEvents({"update", "mousepressed", "mousereleased", "keypressed", "keyreleased"})
-
     GS.switch(Game)
 end
 
