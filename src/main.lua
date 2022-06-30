@@ -20,6 +20,7 @@ Lume = require "libs.lume"
 Object = require "libs.classic.classic"
 Bump = require "libs.bump"
 Anim8 = require "libs.anim8"
+Draworder = require "libs.draworder"
 Concord = require "libs.concord"
 
 Utils = require "engine.utils"
