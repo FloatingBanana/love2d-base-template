@@ -28,7 +28,7 @@ Utils = require "engine.utils"
 -- Misc
 local Game = require "states.Game"
 local ECSGame = require "states.ECSGame"
-local InputHelper = require "InputHelper"
+local InputHelper = require "engine.inputHelper"
 
 function love.load(args)
     InputHelper.registerAxis("horizontal", {"a", "left"}, {"d", "right"})

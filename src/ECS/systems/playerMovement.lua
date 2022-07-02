@@ -1,4 +1,4 @@
-local InputHelper = require "InputHelper"
+local InputHelper = require "engine.inputHelper"
 
 local PlayerMovement = Concord.system({
     pool = {"transform", "collidable", "player"}

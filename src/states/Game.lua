@@ -1,6 +1,6 @@
 local Game = {}
 
-local EM = require "EntityManager"
+local EM = require "engine.entityManager"
 
 function Game:enter(from, ...)
     
