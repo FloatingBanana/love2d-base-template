@@ -27,10 +27,15 @@ Utils = require "engine.utils"
 
 -- Misc
 local Game = require "states.Game"
+local ECSGame = require "states.ECSGame"
+local InputHelper = require "InputHelper"
 
 function love.load(args)
+    InputHelper.registerAxis("horizontal", {"a", "left"}, {"d", "right"})
+    InputHelper.registerAxis("vertical", {"w", "up"}, {"s", "down"})
+
     GS.registerEvents({"update", "mousepressed", "mousereleased", "keypressed", "keyreleased"})
-    GS.switch(Game)
+    GS.switch(ECSGame)
 end
 
 function love.draw()
