@@ -18,7 +18,7 @@ function IH.registerAction(name, buttons)
 end
 
 function IH.registerAxis(name, negative, positive)
-    IH.actions[name] = {negative = negative, positive = positive}
+    IH.axis[name] = {negative = negative, positive = positive}
 end
 
 function IH.getAction(name)
@@ -26,8 +26,10 @@ function IH.getAction(name)
 end
 
 function IH.getAxis(name)
-    local pos = anyPressed(IH.axis.positive) and 1 or 0
-    local neg = anyPressed(IH.axis.negative) and -1 or 0
+    local pos = anyPressed(IH.axis[name].positive) and  1 or 0
+    local neg = anyPressed(IH.axis[name].negative) and -1 or 0
 
     return pos + neg
 end
+
+return IH
