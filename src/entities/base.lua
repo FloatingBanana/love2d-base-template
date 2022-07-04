@@ -1,7 +1,9 @@
 local Base = Object:extend()
 
-function Base:init(position)
+function Base:new(position)
     self.position = position
 end
 
 Base.onRemove = NULLFUNC
+
+return Base

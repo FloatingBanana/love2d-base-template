@@ -1,8 +1,8 @@
 local Base = require "entities.base"
 local Body = Base:extend()
 
-function Body:init(world, position, size)
-    Base.init(self, position)
+function Body:new(world, position, size)
+    Base.new(self, position)
 
     self.world = world
     self.size = size
@@ -27,3 +27,5 @@ end
 
 -- Callbacks
 Body.onCollision = NULLFUNC
+
+return Body
