@@ -35,7 +35,7 @@ function love.load(args)
     InputHelper.registerAxis("vertical", {"w", "up"}, {"s", "down"})
 
     GS.registerEvents({"update", "mousepressed", "mousereleased", "keypressed", "keyreleased"})
-    GS.switch(ECSGame)
+    GS.switch(Game)
 end
 
 function love.draw()

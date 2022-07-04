@@ -10,6 +10,11 @@ function Body:new(world, position, size)
     world:add(self, position.x, position.y, size.x, size.y)
 end
 
+function Body:draw()
+    lg.setColor(1,1,1,1)
+    lg.rectangle("fill", self.world:getRect(self))
+end
+
 function Body:moveTo(target, filter)
     local goalx, goaly, cols, len = self.world:move(self, target.x, target.y, filter)
     self.position = Vector(goalx, goaly)
