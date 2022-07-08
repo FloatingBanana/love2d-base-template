@@ -13,6 +13,5 @@
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "bin",
-        "src/libs"
     ]
 }
