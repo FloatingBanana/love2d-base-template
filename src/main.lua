@@ -22,30 +22,38 @@ Bump = require "libs.bump"
 Anim8 = require "libs.anim8"
 Draworder = require "libs.draworder"
 Concord = require "libs.concord"
+Color = require "libs.color"
 
 Utils = require "engine.utils"
 
 -- Misc
-local Game = require "states.Game"
-local ECSGame = require "states.ECSGame"
 local InputHelper = require "engine.inputHelper"
+local TransitionManager = require "engine.transitionManager"
+
+local Game = require "states.Game"
+local Splash = require "states.Splash1"
 
 function love.load(args)
     InputHelper.registerAxis("horizontal", {"a", "left"}, {"d", "right"})
     InputHelper.registerAxis("vertical", {"w", "up"}, {"s", "down"})
 
     GS.registerEvents({"update", "mousepressed", "mousereleased", "keypressed", "keyreleased"})
-    GS.switch(Game)
+    GS.switch(Splash)
 end
 
 function love.draw()
     GS.draw()
 
+    TransitionManager.draw()
+
+    Utils.setFont(13)
+    lg.setColor(1,1,1,1)
     lg.print("FPS: " .. love.timer.getFPS())
 end
 
 function love.update(dt)
-    
+    TransitionManager.update(dt)
+    Timer.update(dt)
 end
 
 function love.keypressed(key)
