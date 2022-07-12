@@ -5,16 +5,13 @@ local Game = require "states.Game"
 local TransitionManager = require "engine.transitionManager"
 local Fade = require "engine.transitionManager.transitions.fade"
 
-local centerX = WIDTH/2
-local centerY = HEIGHT/2
-
 local heartImg = lg.newImage("assets/images/love_heart.png")
 local backImg = lg.newImage("assets/images/love_back.png")
 
 local values = {
-    heart = {x = centerX, y = HEIGHT+100, r = 0},
-	back  = {x = centerX, y = HEIGHT+100},
-	text  = {x = centerX - 50},
+    heart = {x = CENTERX, y = HEIGHT+100, r = 0},
+	back  = {x = CENTERX, y = HEIGHT+100},
+	text  = {x = CENTERX - 50},
 	text2 = {y = HEIGHT+100}
 }
 
@@ -49,13 +46,13 @@ function Splash:draw()
 	lg.setColor(1,1,1,1)
 	
     Utils.setFont("handy_andy", 28)
-	lg.printf("Made with", values.text.x, centerY-40, 400, "center")
+	lg.printf("Made with", values.text.x, CENTERY-40, 400, "center")
 
 	Utils.setFont("handy_andy", 60)
-	lg.printf("LÖVE", values.text.x, centerY-5, 400, "center")
+	lg.printf("LÖVE", values.text.x, CENTERY-5, 400, "center")
 	
 	lg.setColor(0,0,0,1)
-	lg.rectangle("fill", centerX+50, 0, centerX, HEIGHT)
+	lg.rectangle("fill", CENTERX+50, 0, CENTERX, HEIGHT)
 	
 	lg.setColor(1,1,1,1)
 	lg.draw(backImg, values.back.x, values.back.y, 0, .3, .3, backImg:getWidth()/2, backImg:getHeight()/2)
@@ -63,11 +60,11 @@ function Splash:draw()
 
     -- Left text
 	Utils.setFont("handy_andy", 30)
-	lg.printf("By FloatingBanana", 0, values.text2.y, centerX, "center")
+	lg.printf("By FloatingBanana", 0, values.text2.y, CENTERX, "center")
 
     -- Right text
 	Utils.setFont("polished", 30)
-	lg.printf("Game JaaJ V", centerX, values.text2.y, centerX, "center")
+	lg.printf("Game JaaJ V", CENTERX, values.text2.y, CENTERX, "center")
 
 	-- fade.draw()
 end

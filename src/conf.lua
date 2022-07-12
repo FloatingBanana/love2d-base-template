@@ -1,6 +1,9 @@
 WIDTH = 800
 HEIGHT = 600
 
+CENTERX = WIDTH / 2
+CENTERY = HEIGHT / 2
+
 function love.conf(t)
     t.identity = nil
     t.appendidentity = false
