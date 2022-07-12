@@ -8,26 +8,27 @@ local backImg = lg.newImage("assets/images/love_back.png")
 local TransitionManager = require "engine.transitionManager"
 local Fade = require "engine.transitionManager.transitions.fade"
 
-local values = {
-	heart    = {x = CENTERX, y = CENTERY, s = 0},
-	back     = {x = CENTERX, y = CENTERY, s = 0, r = 0},
-	opacity  = {1,1,1,0},
-	opacity2 = {1,1,1,0},
-}
+local heart    = {x = CENTERX, y = CENTERY, s = 0}
+local back     = {x = CENTERX, y = CENTERY, s = 0, r = 0}
+local opacity  = Color(1,1,1,0)
+local opacity2 = Color(1,1,1,0)
 
 function Splash:enter(from)
 	Timer.script(function(wait)
-		Timer.tween(.5, values.heart, {s = 0.36}, "out-back")
+		Timer.tween(.5, heart, {s = 0.36}, "out-back")
 
 		wait(.5)
-		Timer.tween(.6, values.back, {y = values.back.y - 133, r = math.pi*2, s = .3}, "out-cubic")
+
+		Timer.tween(.6, back, {y = back.y - 133, r = math.pi*2, s = .3}, "out-cubic")
 
 		wait(.1)
-		Timer.tween(.6, values.heart, {y = values.heart.y - 133, s = .3}, "out-cubic")
-		Timer.tween(1, values.opacity, {[4] = 1}, "linear")
+
+		Timer.tween(.6, heart, {y = heart.y - 133, s = .3}, "out-cubic")
+		Timer.tween(1, opacity, {alpha = 1}, "linear")
 
 		wait(.5)
-		Timer.tween(1, values.opacity2, {[4]=1}, "linear")
+
+		Timer.tween(1, opacity2, {alpha = 1}, "linear")
 
 		wait(2)
 
@@ -41,19 +42,19 @@ end
 
 function Splash:draw()
 	Utils.setFont("handy_andy", 28)
-	lg.setColor(values.opacity)
+	lg.setColor(opacity)
 	lg.printf("Made with", 0, CENTERY-40, WIDTH, "center")
 
 	Utils.setFont("handy_andy", 60)
 	lg.printf("LÖVE", 0, CENTERY-5, WIDTH, "center")
 
 	Utils.setFont("handy_andy", 40)
-	lg.setColor(values.opacity2)
+	lg.setColor(opacity2)
 	lg.printf("By FloatingBanana", 0, CENTERY+150, WIDTH, "center")
 
 	lg.setColor(1,1,1,1)
-	lg.draw(backImg, values.back.x, values.back.y, values.back.r, values.back.s, values.back.s, backImg:getWidth()/2, backImg:getHeight()/2)
-	lg.draw(heartImg, values.heart.x, values.heart.y, values.heart.r, values.heart.s, values.heart.s, heartImg:getWidth()/2, heartImg:getHeight()/2)
+	lg.draw(backImg, back.x, back.y, back.r, back.s, back.s, backImg:getWidth()/2, backImg:getHeight()/2)
+	lg.draw(heartImg, heart.x, heart.y, heart.r, heart.s, heart.s, heartImg:getWidth()/2, heartImg:getHeight()/2)
 end
 
 return Splash
