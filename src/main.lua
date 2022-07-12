@@ -31,7 +31,7 @@ local InputHelper = require "engine.inputHelper"
 local TransitionManager = require "engine.transitionManager"
 
 local Game = require "states.Game"
-local Splash = require "states.Splash1"
+local Splash = require "states.Splash2"
 
 function love.load(args)
     InputHelper.registerAxis("horizontal", {"a", "left"}, {"d", "right"})
