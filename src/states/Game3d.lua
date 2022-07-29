@@ -19,16 +19,18 @@ function Game:draw()
     local view = Matrix.createLookAt(pos, pos + dir, Vector3(0, 1, 0))
     local proj = Matrix.createPerspectiveFOV(math.rad(90), WIDTH/HEIGHT, 0.01, 1000)
 
-    lg.setDepthMode("less", false)
-    
+    lg.setDepthMode("lequal", true)
+
     for name, mesh in pairs(myModel.meshes) do
-        for name, material in pairs(mesh.materials) do
-            material.worldMatrix = Matrix.identity(Vector3(.3, .3, .3))
+        for i, part in ipairs(mesh.parts) do
+            local material = part.material
+
+            material.worldMatrix = Matrix.identity()
             material.viewMatrix = view
             material.projectionMatrix = proj
+
+            part:draw()
         end
-        
-        mesh:draw()
     end
     lg.setDepthMode()
     lg.setShader()
@@ -37,7 +39,7 @@ end
 local yaw = 0
 function Game:update(dt)
     yaw = yaw - InputHelper.getAxis("horizontal") * dt
-    dir = Vector3(0,0,1):transform(Quaternion.createFromYawPitchRoll(yaw, 0, 0))
+    dir = Vector3(math.sin(yaw),0,math.cos(yaw))
 
     pos = pos + dir * -InputHelper.getAxis("vertical") * dt
 end
