@@ -17,9 +17,11 @@ local dir = Vector3()
 
 function Game:draw()
     local view = Matrix.createLookAt(pos, pos + dir, Vector3(0, 1, 0))
-    local proj = Matrix.createPerspectiveFOV(math.rad(90), WIDTH/HEIGHT, 0.01, 1000)
+    local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
 
     lg.setDepthMode("lequal", true)
+    lg.setMeshCullMode("back")
+    lg.setBlendMode("replace")
 
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
@@ -29,9 +31,20 @@ function Game:draw()
             material.viewMatrix = view
             material.projectionMatrix = proj
 
+            material.viewPosition = pos
+            material.directionalLight = {
+                direction = Vector3(-1, -1, -1):normalize(),
+                ambient = Vector3(1, 1, 1),
+                diffuse = Vector3(1, 1, 1),
+                specular = Vector3(1, 1, 1)
+            }
+
             part:draw()
         end
     end
+
+    lg.setBlendMode("alpha")
+    lg.setMeshCullMode("none")
     lg.setDepthMode()
     lg.setShader()
 end
