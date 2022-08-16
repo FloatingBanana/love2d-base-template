@@ -1,3 +1,4 @@
+local Vector2 = require "engine.vector2"
 local Base = require "entities.base"
 local Body = Base:extend()
 
@@ -17,7 +18,7 @@ end
 
 function Body:moveTo(target, filter)
     local goalx, goaly, cols, len = self.world:move(self, target.x, target.y, filter)
-    self.position = Vector(goalx, goaly)
+    self.position = Vector2(goalx, goaly)
 
     for i = 1, len do
         self:onCollision(cols[i])

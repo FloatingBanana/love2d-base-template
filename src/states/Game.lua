@@ -1,5 +1,6 @@
 local Game = {}
 
+local Vector2 = require "engine.vector2"
 local EM = require "engine.entityManager"
 local world = nil
 
@@ -10,8 +11,8 @@ local Body = require "entities.Body"
 function Game:enter(from, ...)
     world = Bump.newWorld(32)
 
-    EM.add(Player(world, Vector(200, 250)))
-    EM.add(Body(world, Vector(50, 200), Vector(150, 32)))
+    EM.add(Player(world, Vector2(200, 250)))
+    EM.add(Body(world, Vector2(50, 200), Vector2(150, 32)))
 end
 
 function Game:draw()

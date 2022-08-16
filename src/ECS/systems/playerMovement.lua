@@ -1,4 +1,5 @@
 local InputHelper = require "engine.inputHelper"
+local Vector2     = require "engine.vector2"
 
 local PlayerMovement = Concord.system({
     pool = {"transform", "collidable", "player"}
@@ -11,7 +12,7 @@ function PlayerMovement:update(dt)
         local collidable = entity.collidable
         local player = entity.player
 
-        local direction = Vector(
+        local direction = Vector2(
             InputHelper.getAxis("horizontal"),
             InputHelper.getAxis("vertical")
         )

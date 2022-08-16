@@ -15,7 +15,6 @@ lfs = love.filesystem
 -- Libs
 GS = require "libs.gamestate"
 Timer = require "libs.timer"
-Vector = require "libs.brinevector"
 Lume = require "libs.lume"
 Object = require "libs.classic.classic"
 Bump = require "libs.bump"

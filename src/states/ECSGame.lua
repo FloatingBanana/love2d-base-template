@@ -1,3 +1,4 @@
+local Vector2 = require "engine.vector2"
 local Game = {}
 
 local Systems = {}
@@ -15,15 +16,15 @@ function Game:enter(from, ...)
 
     -- Player entity
     Concord.entity(ECSWorld)
-        :give("transform", Vector(200, 200))
+        :give("transform", Vector2(200, 200))
         :give("player", 100)
-        :give("collidable", BumpWorld, Vector(200, 200), Vector(32, 32))
+        :give("collidable", BumpWorld, Vector2(200, 200), Vector2(32, 32))
 
 
     -- Wall
     Concord.entity(ECSWorld)
-        :give("transform", Vector(50, 150))
-        :give("collidable", BumpWorld, Vector(50, 150), Vector(250, 32))
+        :give("transform", Vector2(50, 150))
+        :give("collidable", BumpWorld, Vector2(50, 150), Vector2(250, 32))
 end
 
 function Game:draw()
