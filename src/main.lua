@@ -31,13 +31,14 @@ local TransitionManager = require "engine.transitionManager"
 
 local Game = require "states.Game3d"
 local Splash = require "states.Splash2"
+local Lighttest = require "states.lighttest"
 
 function love.load(args)
     InputHelper.registerAxis("horizontal", {"a", "left"}, {"d", "right"})
     InputHelper.registerAxis("vertical", {"w", "up"}, {"s", "down"})
 
-    GS.registerEvents({"update", "mousepressed", "mousereleased", "keypressed", "keyreleased"})
-    GS.switch(Game)
+    GS.registerEvents({"update", "mousepressed", "mousereleased", "mousemoved", "keypressed", "keyreleased"})
+    GS.switch(Lighttest)
 end
 
 function love.draw()
