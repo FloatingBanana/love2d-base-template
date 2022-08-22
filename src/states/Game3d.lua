@@ -9,11 +9,13 @@ local Quaternion  = require "engine.quaternion"
 local myModel = Model("assets/models/untitled.obj")
 
 function Game:enter(from, ...)
-    
+    lm.setRelativeMode(true)
 end
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
+
+local modelRot = 0
 
 function Game:draw()
     local view = Matrix.createLookAt(pos, pos + dir, Vector3(0, 1, 0))
@@ -27,7 +29,12 @@ function Game:draw()
         for i, part in ipairs(mesh.parts) do
             local material = part.material
 
-            material.worldMatrix = Matrix.identity()
+            if name == "Drawer" then
+                material.worldMatrix = Matrix.createFromYawPitchRoll(modelRot, 0, 0)
+            else
+                material.worldMatrix = Matrix.identity()
+            end
+
             material.viewMatrix = view
             material.projectionMatrix = proj
 
@@ -49,12 +56,29 @@ function Game:draw()
     lg.setShader()
 end
 
-local yaw = 0
+local camRot = Vector3()
 function Game:update(dt)
-    yaw = yaw - InputHelper.getAxis("horizontal") * dt
-    dir = Vector3(math.sin(yaw),0,math.cos(yaw))
+    local walkdir = Vector3(
+        -InputHelper.getAxis("horizontal"),
+        0,
+        -InputHelper.getAxis("vertical")
+    )
 
-    pos = pos + dir * -InputHelper.getAxis("vertical") * dt
+    local rot = Quaternion.createFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
+
+    if walkdir.lengthSquared > 0 then
+        pos = pos + walkdir:normalize():transform(rot) * dt
+    end
+
+    dir = Vector3(0, 0, 1):transform(rot)
+
+    modelRot = modelRot + dt
+end
+
+function Game:mousemoved(x, y, dx, dy)
+    local sensibility = 0.005
+    camRot.yaw = camRot.yaw + -dx * sensibility
+    camRot.pitch = camRot.pitch + dy * sensibility
 end
 
 function Game:keypressed(key)
