@@ -13,5 +13,6 @@
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "bin",
-    ]
+    ],
+    "glsllint.glslangValidatorArgs": "--glsl-version 120"
 }
