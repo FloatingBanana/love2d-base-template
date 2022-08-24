@@ -39,12 +39,20 @@ function Game:draw()
             material.projectionMatrix = proj
 
             material.viewPosition = pos
-            material.directionalLight = {
-                direction = Vector3(-1, -1, -1):normalize(),
-                ambient = Vector3(1, 1, 1),
-                diffuse = Vector3(1, 1, 1),
-                specular = Vector3(1, 1, 1)
-            }
+            material.shininess = 32
+
+            material.shader:send("u_spotLightsCount", 1)
+            material.shader:send("u_spotLights[0].position", {pos:split()})
+            material.shader:send("u_spotLights[0].direction", {dir:split()})
+
+            material.shader:send("u_spotLights[0].ambient", {.2,.2,.2})
+            material.shader:send("u_spotLights[0].diffuse", {1,1,1})
+            material.shader:send("u_spotLights[0].specular", {1,1,1})
+
+            material.shader:send("u_spotLights[0].cutOff", math.cos(math.rad(12)))
+            material.shader:send("u_spotLights[0].outerCutOff", math.cos(math.rad(17.5)))
+            -- material.shader:send("u_spotLights[0].linear", 0.09)
+            -- material.shader:send("u_spotLights[0].quadratic", 0.032)
 
             part:draw()
         end
@@ -77,7 +85,7 @@ end
 
 function Game:mousemoved(x, y, dx, dy)
     local sensibility = 0.005
-    camRot.yaw = camRot.yaw + -dx * sensibility
+    camRot.yaw = camRot.yaw - dx * sensibility
     camRot.pitch = camRot.pitch + dy * sensibility
 end
 
