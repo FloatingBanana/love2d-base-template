@@ -6,7 +6,7 @@ local world = nil
 
 -- Entities
 local Player = require "entities.player"
-local Body = require "entities.Body"
+local Body = require "entities.body"
 
 function Game:enter(from, ...)
     world = Bump.newWorld(32)
