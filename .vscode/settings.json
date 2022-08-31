@@ -14,5 +14,5 @@
         ".vscode",
         "bin",
     ],
-    "glsllint.glslangValidatorArgs": "--glsl-version 120"
+    "glsllint.glslangValidatorArgs": "--glsl-version 120 --D Texel=texture2D"
 }
