@@ -6,7 +6,9 @@ local Vector2 = require "engine.vector2"
 local Quaternion  = require "engine.quaternion"
 local InputHelper = require "engine.inputHelper"
 local Model = require "engine.3DRenderer.model"
+local PointLight = require "engine.3DRenderer.lights.pointLight"
 local SpotLight = require "engine.3DRenderer.lights.spotLight"
+local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 
 local myModel = Model("assets/models/untitled.obj")
@@ -19,21 +21,23 @@ local modelRot = 0
 local shadowmap = lg.newCanvas(2048, 2048)
 
 local depthRendererShader = lg.newShader [[
-uniform sampler2D u_depthMap;
+uniform samplerCube u_depthMap;
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
-    float depth = Texel(u_depthMap, texcoords).r;
+    float depth = Texel(u_depthMap, vec3(1.0, texcoords.y, texcoords.x)).r;
     return vec4(vec3(depth), 1.0);
 }
 ]]
 
 local lightmng = Lightmanager()
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(12), math.rad(17.5), Color(.1,.1,.1), Color.WHITE, Color.WHITE)
+local light = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.5,.5,.5), Color.WHITE, Color.WHITE)
+-- local light = DirectionalLight(Vector3(3, 3, 0), Color(.5,.5,.5), Color.WHITE, Color.WHITE)
+-- local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(12), math.rad(17.5), Color(.1,.1,.1), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
     lightmng:addLights(light)
-    
+
     for name, mesh in pairs(myModel.meshes) do
         lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
     end
