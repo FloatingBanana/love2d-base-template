@@ -21,18 +21,18 @@ local modelRot = 0
 local shadowmap = lg.newCanvas(2048, 2048)
 
 local depthRendererShader = lg.newShader [[
-uniform samplerCube u_depthMap;
+uniform sampler2D u_depthMap;
 
 vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
-    float depth = Texel(u_depthMap, vec3(1.0, texcoords.y, texcoords.x)).r;
+    float depth = Texel(u_depthMap, texcoords).r;
     return vec4(vec3(depth), 1.0);
 }
 ]]
 
 local lightmng = Lightmanager()
-local light = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.5,.5,.5), Color.WHITE, Color.WHITE)
+-- local light = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.5,.5,.5), Color.WHITE, Color.WHITE)
 -- local light = DirectionalLight(Vector3(3, 3, 0), Color(.5,.5,.5), Color.WHITE, Color.WHITE)
--- local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(12), math.rad(17.5), Color(.1,.1,.1), Color.WHITE, Color.WHITE)
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(12), math.rad(17.5), Color(.1,.1,.1), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
