@@ -30,13 +30,13 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
 ]]
 
 local lightmng = Lightmanager()
--- local light = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.5,.5,.5), Color.WHITE, Color.WHITE)
--- local light = DirectionalLight(Vector3(3, 3, 0), Color(.5,.5,.5), Color.WHITE, Color.WHITE)
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(12), math.rad(17.5), Color(.1,.1,.1), Color.WHITE, Color.WHITE)
+local light1 = DirectionalLight(Vector3(3, 3, 0), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
+local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.4,.4,.4), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
-    lightmng:addLights(light)
+    lightmng:addLights(light, light2)
 
     for name, mesh in pairs(myModel.meshes) do
         lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
@@ -44,6 +44,7 @@ function Game:enter(from, ...)
 end
 
 function Game:draw()
+    lg.clear(Color.BLUE * 0.2)
     lightmng:applyLighting()
 
     lg.setDepthMode("lequal", true)
@@ -81,7 +82,7 @@ function Game:draw()
     lg.setMeshCullMode("none")
     lg.setDepthMode()
 
-    if lm.isDown(2) then
+    if lk.isDown("r") then
         lg.setShader(depthRendererShader)
         depthRendererShader:send("u_depthMap", light.shadowmap)
         lg.draw(shadowmap,0,0,0, .25, .25)
@@ -109,6 +110,10 @@ function Game:update(dt)
     dir = Vector3(0, 0, 1):transform(rot)
 
     modelRot = modelRot + dt
+
+    if lm.isDown(2) then
+        light2.position = pos:clone()
+    end
 
     if lm.isDown(1) then
         light.position, light.direction = pos:clone(), dir:clone()
