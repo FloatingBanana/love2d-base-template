@@ -51,7 +51,7 @@ function Game:draw()
     lg.setBlendMode("replace")
     lg.setMeshCullMode("back")
 
-    local view = Matrix.createLookAt(pos, pos + dir, Vector3(0, 1, 0))
+    local view = Matrix.createLookAtDirection(pos, dir, Vector3(0, 1, 0))
     local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
 
     for name, mesh in pairs(myModel.meshes) do
