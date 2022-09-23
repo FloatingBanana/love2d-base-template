@@ -68,8 +68,7 @@ function Game:draw()
             lightmng:setMeshPartMatrix(part, world)
 
             material.worldMatrix = world
-            material.viewMatrix = view
-            material.projectionMatrix = proj
+            material.viewProjectionMatrix = view * proj
 
             material.viewPosition = pos
             material.shininess = 32
