@@ -1,9 +1,9 @@
 local Game = {}
 
-local Matrix = require "engine.matrix"
-local Vector3 = require "engine.vector3"
-local Vector2 = require "engine.vector2"
-local Quaternion  = require "engine.quaternion"
+local Matrix = require "engine.math.matrix"
+local Vector3 = require "engine.math.vector3"
+local Vector2 = require "engine.math.vector2"
+local Quaternion  = require "engine.math.quaternion"
 local InputHelper = require "engine.inputHelper"
 local Model = require "engine.3DRenderer.model"
 local PointLight = require "engine.3DRenderer.lights.pointLight"
@@ -36,7 +36,7 @@ local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.4,.4,.4), Color.WHI
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
-    lightmng:addLights(light, light2)
+    lightmng:addLights(light)
 
     for name, mesh in pairs(myModel.meshes) do
         lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))

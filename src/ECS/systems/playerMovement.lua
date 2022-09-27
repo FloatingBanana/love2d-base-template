@@ -1,5 +1,5 @@
 local InputHelper = require "engine.inputHelper"
-local Vector2     = require "engine.vector2"
+local Vector2     = require "engine.math.vector2"
 
 local PlayerMovement = Concord.system({
     pool = {"transform", "collidable", "player"}

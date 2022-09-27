@@ -1,6 +1,6 @@
 -- https://slembcke.github.io/SuperFastHardShadows
 local inputHelper = require "engine.inputHelper"
-local Vector2     = require "engine.vector2"
+local Vector2     = require "engine.math.vector2"
 local PolyShadow  = require "engine.2DLighting.polygonShadowLighting"
 local LT = {}
 

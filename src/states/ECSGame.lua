@@ -1,4 +1,4 @@
-local Vector2 = require "engine.vector2"
+local Vector2 = require "engine.math.vector2"
 local Game = {}
 
 local Systems = {}
