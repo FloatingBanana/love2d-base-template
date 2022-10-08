@@ -11,23 +11,12 @@ local SpotLight = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 
-local myModel = Model("assets/models/untitled.obj")
+local myModel = Model("assets/models/untitled.fbx")
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
 
 local modelRot = 0
-
-local shadowmap = lg.newCanvas(2048, 2048)
-
-local depthRendererShader = lg.newShader [[
-uniform sampler2D u_depthMap;
-
-vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
-    float depth = Texel(u_depthMap, texcoords).r;
-    return vec4(vec3(depth), 1.0);
-}
-]]
 
 local lightmng = Lightmanager()
 local light1 = DirectionalLight(Vector3(3, 3, 0), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
@@ -71,7 +60,6 @@ function Game:draw()
             material.viewProjectionMatrix = view * proj
 
             material.viewPosition = pos
-            material.shininess = 32
 
             part:draw()
         end
@@ -80,12 +68,6 @@ function Game:draw()
     lg.setBlendMode("alpha")
     lg.setMeshCullMode("none")
     lg.setDepthMode()
-
-    if lk.isDown("r") then
-        lg.setShader(depthRendererShader)
-        depthRendererShader:send("u_depthMap", light.shadowmap)
-        lg.draw(shadowmap,0,0,0, .25, .25)
-    end
 
     lg.setShader()
 end
