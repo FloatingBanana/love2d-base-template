@@ -6,7 +6,7 @@
         "type": "lua-local",
         "request": "launch",
         "program": {
-          "command": "love"
+          "command": "${workspaceFolder}\\bin\\love-windows\\love.exe"
         },
         "args": [
           "src"
