@@ -3,7 +3,7 @@
 ---
 --- A right-handed 4x4 matrix. Mostly used to store 3D transformations.
 ---
---- @class Matrix
+--- @class Matrix: CStruct
 ---
 --- @field translation Vector3: The translation part of this matrix (m41, m42, m43)
 --- @field forward Vector3: The forward direction of this matrix (m31, m32, m33)

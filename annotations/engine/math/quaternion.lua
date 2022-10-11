@@ -3,7 +3,8 @@
 ---
 --- An object that represents a 3D rotation
 ---
---- @class Quaternion
+--- @class Quaternion: CStruct
+---
 --- @field x number: The X axis of this quaternion
 --- @field y number: The Y axis of this quaternion
 --- @field z number: The Z axis of this quaternion

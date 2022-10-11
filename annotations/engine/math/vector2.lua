@@ -3,7 +3,7 @@
 ---
 --- A 2D vector that can represent a position, direction, etc
 ---
---- @class Vector2
+--- @class Vector2: CStruct
 ---
 --- @field lenght number: The magnitude of this vector
 --- @field lengthSquared number: The squared magnitude of this vector
