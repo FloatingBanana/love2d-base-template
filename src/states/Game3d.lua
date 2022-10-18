@@ -11,7 +11,7 @@ local SpotLight = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 
-local myModel = Model("assets/models/untitled.fbx")
+local myModel = Model("assets/models/untitled_uv.fbx")
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
