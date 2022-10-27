@@ -14,7 +14,7 @@ local CStruct = {}
 
 
 --- Returns a table array containing the components of this struct sequentialy.
---- This struct is used as an easy way to pass structs to shaders.
+--- This method is used as an easy way to pass structs to shaders.
 ---
 --- DO NOT store this table anywhere, the table returned here is reused internally
 --- by all instances of the same struct.
