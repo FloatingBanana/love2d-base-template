@@ -13,6 +13,10 @@ local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 
 local myModel = Model("assets/models/untitled_uv.fbx")
 
+local hdrExposure = 0.1
+local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
+local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
+
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
 
@@ -30,11 +34,15 @@ function Game:enter(from, ...)
     for name, mesh in pairs(myModel.meshes) do
         lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
     end
+
+    hdrShader:send("exposure", hdrExposure)
 end
 
 function Game:draw()
-    lg.clear(Color.BLUE * 0.2)
     lightmng:applyLighting()
+
+    lg.setCanvas({hdrCanvas, depth = true})
+    lg.clear(Color.BLUE * 0.2)
 
     lg.setDepthMode("lequal", true)
     lg.setBlendMode("replace")
@@ -65,11 +73,18 @@ function Game:draw()
         end
     end
 
+    lg.setCanvas()
+
+    lg.setShader(hdrShader)
+    lg.draw(hdrCanvas)
+
     lg.setBlendMode("alpha")
     lg.setMeshCullMode("none")
     lg.setDepthMode()
 
     lg.setShader()
+
+    lg.print("HDR exposure: "..hdrExposure, 0, 30)
 end
 
 local camRot = Vector3()
@@ -105,6 +120,11 @@ function Game:mousemoved(x, y, dx, dy)
     local sensibility = 0.005
     camRot.yaw = camRot.yaw - dx * sensibility
     camRot.pitch = camRot.pitch + dy * sensibility
+end
+
+function Game:wheelmoved(x, y)
+    hdrExposure = math.max(hdrExposure + y * 0.1, 0)
+    hdrShader:send("exposure", hdrExposure)
 end
 
 function Game:keypressed(key)
