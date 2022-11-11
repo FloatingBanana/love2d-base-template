@@ -16,7 +16,7 @@
 --- @field scale Vector3: Gets the scaling factor of this matrix
 --- @field rotation Quaternion: Gets the rotation factor of this matrix
 --- @field transposed Matrix: Gets a copy of this matrix with the components transposed
---- @field inverse Matrix: Gets a copy of this matrix with the components inverted (i.e `1 / value`)
+--- @field inverse Matrix: Gets a copy of this matrix with the components inverted
 --- @field m11 number
 --- @field m12 number
 --- @field m13 number
@@ -82,14 +82,14 @@ function Matrix:negate() end
 function Matrix:transpose() end
 
 
---- Invert (i.e make `1 / value`) all components of this matrix
+--- Invert all components of this matrix
 --- @return Matrix: This matrix
 function Matrix:invert() end
 
 
 --- Internaly converts this matrix to a 3x3 matrix
 ---
---- Only use this function if you want to send it to a shader as a `mat3` uniform
+--- Only use this method if you want to send this matrix to a shader as a `mat3` uniform
 --- @return Matrix: This matrix
 function Matrix:to3x3() end
 
