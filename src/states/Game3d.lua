@@ -10,8 +10,18 @@ local PointLight = require "engine.3DRenderer.lights.pointLight"
 local SpotLight = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
+local Skybox           = require "engine.3DRenderer.skybox"
 
 local myModel = Model("assets/models/untitled_uv.fbx")
+
+local cloudSkybox = Skybox({
+    "assets/images/skybox/right.jpg",
+    "assets/images/skybox/left.jpg",
+    "assets/images/skybox/top.jpg",
+    "assets/images/skybox/bottom.jpg",
+    "assets/images/skybox/front.jpg",
+    "assets/images/skybox/back.jpg"
+})
 
 local hdrExposure = 0.1
 local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
@@ -42,7 +52,7 @@ function Game:draw()
     lightmng:applyLighting()
 
     lg.setCanvas({hdrCanvas, depth = true})
-    lg.clear(Color.BLUE * 0.2)
+    lg.clear(Color.BLUE * 0.2) ---@diagnostic disable-line
 
     lg.setDepthMode("lequal", true)
     lg.setBlendMode("replace")
@@ -50,6 +60,8 @@ function Game:draw()
 
     local view = Matrix.createLookAtDirection(pos, dir, Vector3(0, 1, 0))
     local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
+
+    cloudSkybox:render(view, proj)
 
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
