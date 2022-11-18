@@ -61,8 +61,6 @@ function Game:draw()
     local view = Matrix.createLookAtDirection(pos, dir, Vector3(0, 1, 0))
     local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
 
-    cloudSkybox:render(view, proj)
-
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
             local material = part.material
@@ -84,6 +82,8 @@ function Game:draw()
             part:draw()
         end
     end
+
+    cloudSkybox:render(view, proj)
 
     lg.setCanvas()
 
