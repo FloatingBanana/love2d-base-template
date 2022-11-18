@@ -2,7 +2,8 @@
     "Lua.diagnostics.disable": [
         "lowercase-global",
         "redundant-parameter",
-        "unbalanced-assignments"
+        "unbalanced-assignments",
+        "deprecated"
     ],
     "Lua.runtime.version": "LuaJIT",
     "Lua.workspace.library": [
@@ -15,5 +16,9 @@
         ".vscode",
         "bin",
     ],
-    "glsllint.glslangValidatorArgs": "--glsl-version 120 --D Texel=texture2D"
+    "glsllint.glslangValidatorArgs": "--glsl-version 120 --D Texel=texture2D",
+    "Lua.diagnostics.disableScheme": [
+        "git",
+        "bin/*"
+    ]
 }
