@@ -15,9 +15,11 @@ function Player:update(dt)
         InputHelper.getAxis("vertical")
     )
 
-    local target = direction.normalized * (self.speed * dt)
+    if direction.lengthSquared > 0 then
+        local target = direction.normalized * (self.speed * dt)
 
-    self:move(target)
+        self:move(target)
+    end
 end
 
 return Player
