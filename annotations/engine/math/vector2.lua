@@ -91,6 +91,15 @@ function Vector2:setAngle(angle) end
 function Vector2:rotateBy(angle) end
 
 
+--- Rounds down this vector's components
+--- @return Vector2: This vector
+function Vector2:floor() end
+
+
+--- Rounds up this vector's components
+--- @return Vector2: This vector
+function Vector2:ceil() end
+
 --- Checks if any of the components is equal to `Nan`
 --- @return boolean
 function Vector2:isNan() end

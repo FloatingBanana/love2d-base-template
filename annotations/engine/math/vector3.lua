@@ -108,6 +108,16 @@ function Vector3:worldToScreen(screenMatrix, screenSize, minDepth, maxDepth) end
 function Vector3:screenToWorld(screenMatrix, screenSize, minDepth, maxDepth) end
 
 
+--- Rounds down this vector's components
+--- @return Vector3: This vector
+function Vector3:floor() end
+
+
+--- Rounds up this vector's components
+--- @return Vector3: This vector
+function Vector3:ceil() end
+
+
 --- Checks if any of the components is equal to `Nan`
 --- @return boolean
 function Vector3:isNan() end
