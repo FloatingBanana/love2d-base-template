@@ -2,8 +2,8 @@ local Vector2 = require "engine.math.vector2"
 local Base = require "entities.base"
 local Body = Base:extend()
 
-function Body:new(world, position, size)
-    Base.new(self, position)
+function Body:new(world, position, size, layer)
+    Base.new(self, position, layer)
 
     self.world = world
     self.size = size

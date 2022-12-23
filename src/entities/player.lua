@@ -4,7 +4,7 @@ local Body = require "entities.body"
 local Player = Body:extend()
 
 function Player:new(world, position)
-    Body.new(self, world, position, Vector2(32, 32))
+    Body.new(self, world, position, Vector2(32, 32), 1)
 
     self.speed = 100
 end
