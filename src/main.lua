@@ -24,6 +24,7 @@ Concord = require "libs.concord"
 Color = require "libs.color"
 
 Utils = require "engine.utils"
+DebugUtils = require "engine.debugUtils"
 
 -- Misc
 local InputHelper = require "engine.inputHelper"
