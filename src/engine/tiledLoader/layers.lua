@@ -16,10 +16,10 @@ local function recursive_search(t, key, value, unique, recursive)
                 layers[#layers+1] = layer
             end
         end
-        
+
         if recursive and layer.type == "group" then
             local nLayers = recursive_search(layer.layers, key, value, unique, true)
-            
+
             if unique then
                 if nLayers then
                     return nLayers

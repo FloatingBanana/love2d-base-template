@@ -52,7 +52,7 @@ function tilelayer:iterate()
             local col, row = self:getCell(i)
             return col, row, self:getTargetTilesetTile(self.data[i] - 1)
         end
-        
+
         return nil
     end
 end
@@ -70,9 +70,9 @@ function tilelayer:iteratePosition()
             local x, y = self:getPosition(self:getCell(i))
             return x, y, self:getTargetTilesetTile(self.data[i] - 1)
         end
-        
+
         return nil
     end
-end 
+end
 
 return tilelayer
