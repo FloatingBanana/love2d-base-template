@@ -11,8 +11,16 @@ local SpotLight = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 local Skybox           = require "engine.3DRenderer.skybox"
+local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
+local ForwardMaterial = require "engine.3DRenderer.materials.forwardRenderingMaterial"
 
-local myModel = Model("assets/models/untitled_uv.fbx")
+local myModel = Model("assets/models/untitled_uv.fbx", {
+    materials = {
+        drawer = ForwardMaterial,
+        ground = ForwardMaterial,
+        emissive = EmissiveMaterial,
+    }
+})
 
 local cloudSkybox = Skybox({
     "assets/images/skybox/right.jpg",
@@ -23,9 +31,29 @@ local cloudSkybox = Skybox({
     "assets/images/skybox/back.jpg"
 })
 
-local hdrExposure = 0.1
+local brightAreaExtractShader = lg.newShader [[
+vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
+    vec3 pixel = Texel(texture, texcoords).rgb;
+    float brightness = dot(pixel, vec3(0.2126, 0.7152, 0.0722));
+
+    if (brightness > 1.0)
+        return vec4(pixel, 1.0);
+    else
+        return vec4(0.0,0.0,0.0,1.0);
+}
+]]
+
+local hdrExposure = 0.6
 local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
+local blurShader = lg.newShader("engine/shaders/postprocessing/gaussianBlur.frag")
 local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
+local bloomCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
+
+blurShader:send("texSize", {WIDTH, HEIGHT})
+local blurCanvases = {
+    [true] = lg.newCanvas(WIDTH, HEIGHT),
+    [false] = lg.newCanvas(WIDTH, HEIGHT)
+}
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
@@ -42,7 +70,9 @@ function Game:enter(from, ...)
     lightmng:addLights(light)
 
     for name, mesh in pairs(myModel.meshes) do
-        lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
+        if name ~= "light1" and name ~= "light2" then
+            lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
+        end
     end
 
     hdrShader:send("exposure", hdrExposure)
@@ -52,7 +82,7 @@ function Game:draw()
     lightmng:applyLighting()
 
     lg.setCanvas({hdrCanvas, depth = true})
-    lg.clear(Color.BLUE * 0.2) ---@diagnostic disable-line
+    lg.clear(Color.BLUE * 0.2, Color.BLACK) ---@diagnostic disable-line
 
     lg.setDepthMode("lequal", true)
     lg.setBlendMode("replace")
@@ -64,30 +94,51 @@ function Game:draw()
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
             local material = part.material
-            local world = nil
+            local world = mesh.transformation * Matrix.createScale(Vector3(0.01))
 
             if name == "Drawer" then
-                world = Matrix.createFromYawPitchRoll(modelRot, 0, 0)
+                world = world * Matrix.createFromYawPitchRoll(modelRot, 0, 0)
             else
-                world = Matrix.identity()
+                world = world * Matrix.identity()
             end
 
-            lightmng:setMeshPartMatrix(part, world)
+            if name ~= "light1" and name ~= "light2" then
+                lightmng:setMeshPartMatrix(part, world)
+                material.viewPosition = pos
+            end
 
             material.worldMatrix = world
             material.viewProjectionMatrix = view * proj
-
-            material.viewPosition = pos
 
             part:draw()
         end
     end
 
+    -- Skybox
     cloudSkybox:render(view, proj)
+
+    lg.setCanvas(bloomCanvas)
+    lg.setShader(brightAreaExtractShader)
+    lg.draw(hdrCanvas)
+
+    -- Bloom
+    local amount = 10
+    lg.setShader(blurShader)
+    lg.setBlendMode("alpha", "premultiplied")
+    for i=1, amount do
+        local horizontal = (i % 2) == 1
+        local blurDir = horizontal and Vector2(1,0) or Vector2(0,1)
+
+        blurShader:send("direction", blurDir:toFlatTable())
+        lg.setCanvas(blurCanvases[horizontal])
+        lg.draw(i==1 and bloomCanvas or blurCanvases[not horizontal])
+    end
 
     lg.setCanvas()
 
+    -- Render final result
     lg.setShader(hdrShader)
+    hdrShader:send("bloomBlur", blurCanvases[false])
     lg.draw(hdrCanvas)
 
     lg.setBlendMode("alpha")
