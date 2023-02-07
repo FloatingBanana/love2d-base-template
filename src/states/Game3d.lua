@@ -31,21 +31,19 @@ local cloudSkybox = Skybox({
     "assets/images/skybox/back.jpg"
 })
 
-local brightAreaExtractShader = lg.newShader [[
+local brightFilterShader = lg.newShader [[
 vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
     vec3 pixel = Texel(texture, texcoords).rgb;
     float brightness = dot(pixel, vec3(0.2126, 0.7152, 0.0722));
+    float luminance = max(0.0, brightness - 1.0);
 
-    if (brightness > 1.0)
-        return vec4(pixel, 1.0);
-    else
-        return vec4(0.0,0.0,0.0,1.0);
+    return vec4(pixel * sign(luminance), 1.0);
 }
 ]]
 
 local hdrExposure = 0.6
 local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
-local blurShader = lg.newShader("engine/shaders/postprocessing/gaussianBlur.frag")
+local blurShader = lg.newShader("engine/shaders/postprocessing/gaussianBlurOptimized.frag")
 local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
 local bloomCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
 
@@ -118,7 +116,7 @@ function Game:draw()
     cloudSkybox:render(view, proj)
 
     lg.setCanvas(bloomCanvas)
-    lg.setShader(brightAreaExtractShader)
+    lg.setShader(brightFilterShader)
     lg.draw(hdrCanvas)
 
     -- Bloom
