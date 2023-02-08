@@ -44,13 +44,13 @@ vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
 local hdrExposure = 0.6
 local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
 local blurShader = lg.newShader("engine/shaders/postprocessing/gaussianBlurOptimized.frag")
-local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
+local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f", msaa = 8})
 local bloomCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
 
 blurShader:send("texSize", {WIDTH, HEIGHT})
 local blurCanvases = {
-    [true] = lg.newCanvas(WIDTH, HEIGHT),
-    [false] = lg.newCanvas(WIDTH, HEIGHT)
+    [true] = lg.newCanvas(WIDTH/2, HEIGHT/2),
+    [false] = lg.newCanvas(WIDTH/2, HEIGHT/2)
 }
 
 local pos = Vector3(0, 0, -2)
@@ -96,8 +96,6 @@ function Game:draw()
 
             if name == "Drawer" then
                 world = world * Matrix.createFromYawPitchRoll(modelRot, 0, 0)
-            else
-                world = world * Matrix.identity()
             end
 
             if name ~= "light1" and name ~= "light2" then
@@ -129,7 +127,12 @@ function Game:draw()
 
         blurShader:send("direction", blurDir:toFlatTable())
         lg.setCanvas(blurCanvases[horizontal])
-        lg.draw(i==1 and bloomCanvas or blurCanvases[not horizontal])
+
+        if i==1 then
+            lg.draw(bloomCanvas, 0,0,0,.5,.5)
+        else
+            lg.draw(blurCanvases[not horizontal])
+        end
     end
 
     lg.setCanvas()
