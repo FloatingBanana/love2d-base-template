@@ -13,6 +13,7 @@ local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 local Skybox           = require "engine.3DRenderer.skybox"
 local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
 local ForwardMaterial = require "engine.3DRenderer.materials.forwardRenderingMaterial"
+local RenderDevice = require "engine.3DRenderer.3DRenderDevice"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
     materials = {
@@ -31,27 +32,7 @@ local cloudSkybox = Skybox({
     "assets/images/skybox/back.jpg"
 })
 
-local brightFilterShader = lg.newShader [[
-vec4 effect(vec4 color, sampler2D texture, vec2 texcoords, vec2 screencoords) {
-    vec3 pixel = Texel(texture, texcoords).rgb;
-    float brightness = dot(pixel, vec3(0.2126, 0.7152, 0.0722));
-    float luminance = max(0.0, brightness - 1.0);
-
-    return vec4(pixel * sign(luminance), 1.0);
-}
-]]
-
-local hdrExposure = 0.6
-local hdrShader = lg.newShader("engine/shaders/postprocessing/hdr.frag")
-local blurShader = lg.newShader("engine/shaders/postprocessing/gaussianBlurOptimized.frag")
-local hdrCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f", msaa = 8})
-local bloomCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "rgba16f"})
-
-blurShader:send("texSize", {WIDTH, HEIGHT})
-local blurCanvases = {
-    [true] = lg.newCanvas(WIDTH/2, HEIGHT/2),
-    [false] = lg.newCanvas(WIDTH/2, HEIGHT/2)
-}
+local renderer = RenderDevice(Vector2(WIDTH, HEIGHT), 8, .6, 5)
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
@@ -72,19 +53,11 @@ function Game:enter(from, ...)
             lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
         end
     end
-
-    hdrShader:send("exposure", hdrExposure)
 end
 
 function Game:draw()
     lightmng:applyLighting()
-
-    lg.setCanvas({hdrCanvas, depth = true})
-    lg.clear(Color.BLUE * 0.2, Color.BLACK) ---@diagnostic disable-line
-
-    lg.setDepthMode("lequal", true)
-    lg.setBlendMode("replace")
-    lg.setMeshCullMode("back")
+    renderer:beginRendering()
 
     local view = Matrix.createLookAtDirection(pos, dir, Vector3(0, 1, 0))
     local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
@@ -98,7 +71,7 @@ function Game:draw()
                 world = world * Matrix.createFromYawPitchRoll(modelRot, 0, 0)
             end
 
-            if name ~= "light1" and name ~= "light2" then
+            if part.material:is(ForwardMaterial) then
                 lightmng:setMeshPartMatrix(part, world)
                 material.viewPosition = pos
             end
@@ -112,43 +85,9 @@ function Game:draw()
 
     -- Skybox
     cloudSkybox:render(view, proj)
+    renderer:endRendering()
 
-    lg.setCanvas(bloomCanvas)
-    lg.setShader(brightFilterShader)
-    lg.draw(hdrCanvas)
-
-    -- Bloom
-    local amount = 10
-    lg.setShader(blurShader)
-    lg.setBlendMode("alpha", "premultiplied")
-    for i=1, amount do
-        local horizontal = (i % 2) == 1
-        local blurDir = horizontal and Vector2(1,0) or Vector2(0,1)
-
-        blurShader:send("direction", blurDir:toFlatTable())
-        lg.setCanvas(blurCanvases[horizontal])
-
-        if i==1 then
-            lg.draw(bloomCanvas, 0,0,0,.5,.5)
-        else
-            lg.draw(blurCanvases[not horizontal])
-        end
-    end
-
-    lg.setCanvas()
-
-    -- Render final result
-    lg.setShader(hdrShader)
-    hdrShader:send("bloomBlur", blurCanvases[false])
-    lg.draw(hdrCanvas)
-
-    lg.setBlendMode("alpha")
-    lg.setMeshCullMode("none")
-    lg.setDepthMode()
-
-    lg.setShader()
-
-    lg.print("HDR exposure: "..hdrExposure, 0, 30)
+    lg.print("HDR exposure: "..renderer.hdrExposure, 0, 30)
 end
 
 local camRot = Vector3()
@@ -187,8 +126,7 @@ function Game:mousemoved(x, y, dx, dy)
 end
 
 function Game:wheelmoved(x, y)
-    hdrExposure = math.max(hdrExposure + y * 0.1, 0)
-    hdrShader:send("exposure", hdrExposure)
+    renderer.hdrExposure = math.max(renderer.hdrExposure + y * 0.1, 0)
 end
 
 function Game:keypressed(key)
