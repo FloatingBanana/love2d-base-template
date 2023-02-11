@@ -53,6 +53,12 @@ function Game:enter(from, ...)
             lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
         end
     end
+
+    for name, material in pairs(myModel.materials) do
+        if material:is(ForwardMaterial) then
+            lightmng:addMaterial(material)
+        end
+    end
 end
 
 function Game:draw()
