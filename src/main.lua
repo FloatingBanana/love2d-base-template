@@ -30,7 +30,7 @@ DebugUtils = require "engine.debugUtils"
 local InputHelper = require "engine.inputHelper"
 local TransitionManager = require "engine.transitionManager"
 
-local Game = require "states.Game3d"
+local Game = require "states.Game3ddeferred"
 local Splash = require "states.Splash2"
 
 function love.load(args)
