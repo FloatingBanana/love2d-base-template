@@ -41,7 +41,7 @@ function Game:draw()
         Draworder.queue(entity.layer, entity.draw or NULLFUNC, entity)
     end
 
-    Draworder.present()
+    Draworder.present() --- @diagnostic disable-line
     camera:detach()
 
     local startPos = (playerObj.position / 32):floor()

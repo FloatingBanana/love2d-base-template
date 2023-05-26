@@ -8,7 +8,6 @@
     "Lua.runtime.version": "LuaJIT",
     "Lua.workspace.library": [
         "${3rd}/love2d/library",
-        "annotations"
     ],
     "Lua.workspace.checkThirdParty": false,
     "Lua.hint.await": false,
