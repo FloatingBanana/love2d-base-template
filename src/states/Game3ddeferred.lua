@@ -58,14 +58,14 @@ function Game:enter(from, ...)
 
     for name, mesh in pairs(myModel.meshes) do
         -- if name ~= "light1" and name ~= "light2" then
-            lightmng:addMeshParts(Matrix.identity(), unpack(mesh.parts))
+            lightmng:addMeshParts(Matrix.Identity(), unpack(mesh.parts))
         -- end
     end
 end
 
 function Game:draw()
-    local view = Matrix.createLookAtDirection(pos, dir, Vector3(0, 1, 0))
-    local proj = Matrix.createPerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
+    local view = Matrix.CreateLookAtDirection(pos, dir, Vector3(0, 1, 0))
+    local proj = Matrix.CreatePerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
 
     lightmng:applyLighting()
     lg.setCanvas({gPosition, gNormal, gAlbedoSpec, depth = true})
@@ -78,10 +78,10 @@ function Game:draw()
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
             local material = part.material
-            local world = mesh.transformation * Matrix.createScale(Vector3(0.01))
+            local world = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
 
             if name == "Drawer" then
-                world = world * Matrix.createFromYawPitchRoll(modelRot, 0, 0)
+                world = world * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
             end
 
             lightmng:setMeshPartMatrix(part, world)
@@ -130,7 +130,7 @@ function Game:update(dt)
         -InputHelper.getAxis("vertical")
     )
 
-    local rot = Quaternion.createFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
+    local rot = Quaternion.CreateFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
 
     if walkdir.lengthSquared > 0 then
         pos:add(walkdir:normalize():transform(rot) * dt)
