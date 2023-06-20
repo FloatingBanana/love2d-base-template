@@ -13,6 +13,7 @@ local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
 local Skybox           = require "engine.3DRenderer.skybox"
 local DeferredMaterial = require "engine.3DRenderer.materials.deferredPhong"
 local RenderDevice = require "engine.3DRenderer.3DRenderDevice"
+local Stack = require "engine.collections.stack"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
     materials = {
@@ -41,9 +42,41 @@ local gAlbedoSpec = lg.newCanvas(WIDTH, HEIGHT)
 
 local renderer = RenderDevice(Vector2(WIDTH, HEIGHT), 8, .6, 5)
 
+
+-- SSAO https://learnopengl.com/Advanced-Lighting/SSAO
+local ssaoKernel = Stack()
+for i=0, 32-1 do
+    local sample = Vector3(
+        math.random() * 2 - 1,
+        math.random() * 2 - 1,
+        math.random()
+    )
+
+    local scale = i / 32
+    scale = Lume.lerp(0.1, 1, scale*scale)
+
+    sample:normalize():multiply(scale)
+    ssaoKernel:push({sample:split()})
+end
+
+
+local ssaoNoiseData = love.image.newImageData(4, 4, "rg8")
+for i=0, 15 do
+    local x = i % 4
+    local y = math.floor(i/4)
+
+    ssaoNoiseData:setPixel(x, y, math.random(), math.random(), 0, 0)
+end
+local ssaoNoise = lg.newImage(ssaoNoiseData)
+ssaoNoise:setWrap("repeat")
+
+local ssaoCanvas = lg.newCanvas(WIDTH, HEIGHT, {format = "r8"})
+local ssaoShader = lg.newShader("engine/shaders/3D/deferred/ssao.frag")
+
+
+
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
-
 local modelRot = 0
 
 local lightmng = Lightmanager()
@@ -96,17 +129,30 @@ function Game:draw()
     lg.setCanvas({gAlbedoSpec, depth = true})
     cloudSkybox:render(view, proj)
 
-
     lg.setCanvas()
-
     lg.setBlendMode("alpha", "alphamultiply")
     lg.setMeshCullMode("none")
     lg.setDepthMode()
+
+
+    -- SSAO
+    lg.setCanvas(ssaoCanvas)
+    lg.setShader(ssaoShader)
+    lg.clear()
+    ssaoShader:send("u_gPosition", gPosition)
+    ssaoShader:send("u_gNormal", gNormal)
+    ssaoShader:send("u_noiseTex", ssaoNoise)
+    ssaoShader:send("u_samples", unpack(ssaoKernel))
+    ssaoShader:send("u_view", "column", view:toFlatTable())
+    ssaoShader:send("u_projection", "column", proj:toFlatTable())
+    lg.draw(display)
+    lg.setCanvas()
 
     deferredLightPassShader:send("u_viewPosition", pos:toFlatTable())
     deferredLightPassShader:send("u_gPosition", gPosition)
     deferredLightPassShader:send("u_gNormal", gNormal)
     deferredLightPassShader:send("u_gAlbedoSpec", gAlbedoSpec)
+    deferredLightPassShader:send("u_ssaoTex", ssaoCanvas)
 
     renderer:beginRendering()
     lg.setShader(deferredLightPassShader)
@@ -115,7 +161,8 @@ function Game:draw()
     renderer:endRendering()
 
     if lk.isDown("q") then
-        lg.draw(light.shadowmap)
+        lg.draw(ssaoCanvas)
+        -- lg.draw(light.shadowmap)
         -- lg.draw(gNormal)
     end
 
