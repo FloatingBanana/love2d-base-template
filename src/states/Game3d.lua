@@ -1,19 +1,22 @@
 local Game = {}
 
-local Matrix = require "engine.math.matrix"
-local Vector3 = require "engine.math.vector3"
-local Vector2 = require "engine.math.vector2"
-local Quaternion  = require "engine.math.quaternion"
-local InputHelper = require "engine.inputHelper"
-local Model = require "engine.3DRenderer.model"
-local PointLight = require "engine.3DRenderer.lights.pointLight"
-local SpotLight = require "engine.3DRenderer.lights.spotLight"
+local Matrix           = require "engine.math.matrix"
+local Vector3          = require "engine.math.vector3"
+local Vector2          = require "engine.math.vector2"
+local Quaternion       = require "engine.math.quaternion"
+local InputHelper      = require "engine.inputHelper"
+local Model            = require "engine.3DRenderer.model"
+local PointLight       = require "engine.3DRenderer.lights.pointLight"
+local SpotLight        = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
-local Skybox           = require "engine.3DRenderer.skybox"
 local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
-local ForwardMaterial = require "engine.3DRenderer.materials.forwardRenderingMaterial"
-local RenderDevice = require "engine.3DRenderer.3DRenderDevice"
+local ForwardMaterial  = require "engine.3DRenderer.materials.forwardRenderingMaterial"
+local RenderDevice     = require "engine.3DRenderer.3DRenderDevice"
+local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
+local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
+local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
+local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
     materials = {
@@ -23,7 +26,11 @@ local myModel = Model("assets/models/untitled_uv.fbx", {
     }
 })
 
-local cloudSkybox = Skybox({
+local renderer = nil
+local ssao = nil
+local hdr = nil
+local bloom = nil
+local cloudSkybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
     "assets/images/skybox/top.jpg",
@@ -32,7 +39,7 @@ local cloudSkybox = Skybox({
     "assets/images/skybox/back.jpg"
 })
 
-local renderer = RenderDevice(Vector2(WIDTH, HEIGHT), 8, .6, 5)
+local hdrExposure = 1
 
 local pos = Vector3(0, 0, -2)
 local dir = Vector3()
@@ -45,6 +52,17 @@ local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5)
 local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.4,.4,.4), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
+
+    -- ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5)
+    bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
+    hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
+
+    renderer = RenderDevice("forward", Vector2(WIDTH, HEIGHT), {
+        cloudSkybox,
+        -- ssao,
+        bloom,
+        hdr
+    })
 
     lightmng:addLights(light)
 
@@ -62,11 +80,11 @@ function Game:enter(from, ...)
 end
 
 function Game:draw()
-    lightmng:applyLighting()
-    renderer:beginRendering()
-
     local view = Matrix.CreateLookAtDirection(pos, dir, Vector3(0, 1, 0))
     local proj = Matrix.CreatePerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
+
+    lightmng:applyLighting()
+    renderer:beginRendering()
 
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
@@ -89,11 +107,9 @@ function Game:draw()
         end
     end
 
-    -- Skybox
-    cloudSkybox:render(view, proj)
-    renderer:endRendering()
+    renderer:endRendering(view, proj)
 
-    lg.print("HDR exposure: "..renderer.hdrExposure, 0, 30)
+    lg.print("HDR exposure: "..hdrExposure, 0, 30)
 end
 
 local camRot = Vector3()
@@ -132,7 +148,8 @@ function Game:mousemoved(x, y, dx, dy)
 end
 
 function Game:wheelmoved(x, y)
-    renderer.hdrExposure = math.max(renderer.hdrExposure + y * 0.1, 0)
+    hdrExposure = math.max(hdrExposure + y * 0.1, 0)
+    hdr:setExposure(hdrExposure)
 end
 
 function Game:keypressed(key)
