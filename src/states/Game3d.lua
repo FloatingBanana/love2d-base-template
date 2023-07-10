@@ -17,6 +17,7 @@ local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
+local Camera           = require "engine.camera3d"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
     materials = {
@@ -41,9 +42,7 @@ local cloudSkybox = SkyboxClass({
 
 local hdrExposure = 1
 
-local pos = Vector3(0, 0, -2)
-local dir = Vector3()
-
+local playerCam = Camera(Vector3(0, 1, -2), Vector3(0,0,1), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
 
 local lightmng = Lightmanager()
@@ -80,9 +79,6 @@ function Game:enter(from, ...)
 end
 
 function Game:draw()
-    local view = Matrix.CreateLookAtDirection(pos, dir, Vector3(0, 1, 0))
-    local proj = Matrix.CreatePerspectiveFOV(math.rad(60), WIDTH/HEIGHT, 0.01, 1000)
-
     lightmng:applyLighting()
     renderer:beginRendering()
 
@@ -97,17 +93,17 @@ function Game:draw()
 
             if part.material:is(ForwardMaterial) then
                 lightmng:setMeshPartMatrix(part, world)
-                material.viewPosition = pos
+                material.viewPosition = playerCam.position
             end
 
             material.worldMatrix = world
-            material.viewProjectionMatrix = view * proj
+            material.viewProjectionMatrix = playerCam.viewProjectionMatrix
 
             part:draw()
         end
     end
 
-    renderer:endRendering(view, proj)
+    renderer:endRendering(playerCam.viewMatrix, playerCam.projectionMatrix)
 
     lg.print("HDR exposure: "..hdrExposure, 0, 30)
 end
@@ -120,24 +116,23 @@ function Game:update(dt)
         -InputHelper.getAxis("vertical")
     )
 
-    local rot = Quaternion.CreateFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
+    local camRotation = Quaternion.CreateFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
 
     if walkdir.lengthSquared > 0 then
-        pos:add(walkdir:normalize():transform(rot) * dt)
+        playerCam.position:add(walkdir:normalize():transform(camRotation) * dt)
     end
 
-    pos:add(Vector3(0, lk.isDown("space") and 1 or lk.isDown("lshift") and -1 or 0, 0) * dt)
-
-    dir = Vector3(0, 0, 1):transform(rot)
+    playerCam.position.y = playerCam.position.y + (lk.isDown("space") and 1 or lk.isDown("lshift") and -1 or 0) * dt
+    playerCam.direction = Vector3(0, 0, 1):transform(camRotation)
 
     modelRot = modelRot + dt
 
     if lm.isDown(2) then
-        light2.position = pos:clone()
+        light2.position = playerCam.position:clone()
     end
 
     if lm.isDown(1) then
-        light.position, light.direction = pos:clone(), dir:clone()
+        light.position, light.direction = playerCam.position:clone(), playerCam.direction:clone()
     end
 end
 
