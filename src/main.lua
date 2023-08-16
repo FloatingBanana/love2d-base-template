@@ -25,6 +25,7 @@ Color = require "libs.color"
 
 Utils = require "engine.utils"
 DebugUtils = require "engine.debugUtils"
+GLdebug = require "engine.openglDebug"
 
 -- Misc
 local InputHelper = require "engine.inputHelper"
