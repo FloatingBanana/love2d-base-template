@@ -8,9 +8,9 @@
     "Lua.runtime.version": "LuaJIT",
     "Lua.workspace.library": [
         "${3rd}/love2d/library",
+        "src/annotations"
     ],
     "Lua.workspace.checkThirdParty": false,
-    "Lua.hint.await": false,
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "bin",
@@ -19,5 +19,6 @@
     "Lua.diagnostics.disableScheme": [
         "git",
         "bin/*"
-    ]
+    ],
+    "Lua.type.weakUnionCheck": true
 }
