@@ -9,10 +9,10 @@ local Model            = require "engine.3DRenderer.model"
 local PointLight       = require "engine.3DRenderer.lights.pointLight"
 local SpotLight        = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
-local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
+local AmbientLight     = require "engine.3DRenderer.lights.ambientLight"
 local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
 local ForwardMaterial  = require "engine.3DRenderer.materials.forwardRenderingMaterial"
-local RenderDevice     = require "engine.3DRenderer.3DRenderDevice"
+local ForwardRenderer  = require "engine.3DRenderer.renderers.forwardRenderer"
 local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
@@ -26,6 +26,8 @@ local myModel = Model("assets/models/untitled_uv.fbx", {
         emissive = EmissiveMaterial,
     }
 })
+
+local lockMouse = true
 
 local renderer = nil
 local ssao = nil
@@ -42,68 +44,51 @@ local cloudSkybox = SkyboxClass({
 
 local hdrExposure = 1
 
-local playerCam = Camera(Vector3(0, 1, -2), Vector3(0,0,1), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
+local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 100)
 local modelRot = 0
+local drawerMesh = nil
 
-local lightmng = Lightmanager()
-local light1 = DirectionalLight(Vector3(3, 3, 0), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
-local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.4,.4,.4), Color.WHITE, Color.WHITE)
+local ambient = AmbientLight(Color(.2,.2,.2))
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
+local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
-    lm.setRelativeMode(true)
+    lm.setRelativeMode(lockMouse)
 
     -- ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5)
     bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
     hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
 
-    renderer = RenderDevice("forward", Vector2(WIDTH, HEIGHT), {
+    renderer = ForwardRenderer(Vector2(WIDTH, HEIGHT), {
         cloudSkybox,
         -- ssao,
         bloom,
         hdr
     })
 
-    lightmng:addLights(light)
-
     for name, mesh in pairs(myModel.meshes) do
-        if name ~= "light1" and name ~= "light2" then
-            lightmng:addMeshParts(Matrix.Identity(), unpack(mesh.parts))
+        local isEmissive = (name == "light1" or name == "light2")
+
+        renderer:addMeshPart(mesh.parts, {
+            castShadows = not isEmissive,
+            ignoreLighting = isEmissive,
+            worldMatrix = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
+        })
+
+        if name == "Drawer" then
+            drawerMesh = mesh
         end
     end
 
-    for name, material in pairs(myModel.materials) do
-        if material:is(ForwardMaterial) then
-            lightmng:addMaterial(material)
-        end
-    end
+    renderer:addLights(ambient, light, light2)
 end
 
 function Game:draw()
-    lightmng:applyLighting()
-    renderer:beginRendering()
-
-    for name, mesh in pairs(myModel.meshes) do
-        for i, part in ipairs(mesh.parts) do
-            local material = part.material
-            local world = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
-
-            if name == "Drawer" then
-                world = world * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
-            end
-
-            if part.material:is(ForwardMaterial) then
-                lightmng:setMeshPartMatrix(part, world)
-                material.viewPosition = playerCam.position
-            end
-
-            material.worldMatrix = world
-            material.viewProjectionMatrix = playerCam.viewProjectionMatrix
-
-            part:draw()
-        end
+    for i, part in ipairs(drawerMesh.parts) do
+        local settings = renderer:getMeshpartSettings(part)
+        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
     end
 
-    renderer:endRendering(playerCam.viewMatrix, playerCam.projectionMatrix)
+    renderer:render(playerCam.position, playerCam.viewMatrix, playerCam.projectionMatrix)
 
     lg.print("HDR exposure: "..hdrExposure, 0, 30)
 end
@@ -123,7 +108,7 @@ function Game:update(dt)
     end
 
     playerCam.position.y = playerCam.position.y + (lk.isDown("space") and 1 or lk.isDown("lshift") and -1 or 0) * dt
-    playerCam.direction = Vector3(0, 0, 1):transform(camRotation)
+    playerCam.rotation = camRotation
 
     modelRot = modelRot + dt
 
@@ -132,7 +117,7 @@ function Game:update(dt)
     end
 
     if lm.isDown(1) then
-        light.position, light.direction = playerCam.position:clone(), playerCam.direction:clone()
+        light.position, light.direction = playerCam.position:clone(), Vector3(0,0,1):transform(camRotation)
     end
 end
 
@@ -148,7 +133,10 @@ function Game:wheelmoved(x, y)
 end
 
 function Game:keypressed(key)
-
+    if key == "f1" then
+        lockMouse = not lockMouse
+        lm.setRelativeMode(lockMouse)
+    end
 end
 
 function Game:keyreleased(key)

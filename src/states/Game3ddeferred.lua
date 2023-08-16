@@ -9,17 +9,14 @@ local Model            = require "engine.3DRenderer.model"
 local PointLight       = require "engine.3DRenderer.lights.pointLight"
 local SpotLight        = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
-local Lightmanager     = require "engine.3DRenderer.lights.lightmanager"
+local AmbientLight     = require "engine.3DRenderer.lights.ambientLight"
 local DeferredMaterial = require "engine.3DRenderer.materials.deferredPhong"
-local RenderDevice     = require "engine.3DRenderer.3DRenderDevice"
+local DeferredRenderer = require "engine.3DRenderer.renderers.deferredRenderer"
 local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
 local Camera           = require "engine.camera3d"
-
-local deferredLightPassShader = lg.newShader(Utils.preprocessShader((lfs.read("engine/shaders/3D/deferred/lightPass.frag"))))
-
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
     materials = {
@@ -45,13 +42,13 @@ local bloom = nil
 
 local hdrExposure = 1
 
-local playerCam = Camera(Vector3(0, 1, -2), Vector3(0,0,1), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
+local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
+local drawerMesh = nil
 
-local lightmng = Lightmanager()
-local light1 = DirectionalLight(Vector3(3, 3, 0), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(.2,.2,.2), Color.WHITE, Color.WHITE)
-local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.4,.4,.4), Color.WHITE, Color.WHITE)
+local ambient = AmbientLight(Color(.2,.2,.2))
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
+local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
@@ -59,49 +56,37 @@ function Game:enter(from, ...)
     bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
     hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
 
-    renderer = RenderDevice("deferred", Vector2(WIDTH, HEIGHT), {
+    renderer = DeferredRenderer(Vector2(WIDTH, HEIGHT), {
         cloudSkybox,
         ssao,
         bloom,
         hdr
     })
 
-    lightmng:addLights(light)
-    lightmng:addMaterial({shader = deferredLightPassShader})
-
     for name, mesh in pairs(myModel.meshes) do
-        -- if name ~= "light1" and name ~= "light2" then
-            lightmng:addMeshParts(Matrix.Identity(), unpack(mesh.parts))
-        -- end
-    end
-end
+        renderer:addMeshPart(mesh.parts, {
+            castShadows = true,
+            ignoreLighting = false,
+            worldMatrix = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
+        })
 
-function Game:draw()
-    lightmng:applyLighting()
-    renderer:beginDeferredRendering()
-
-    for name, mesh in pairs(myModel.meshes) do
-        for i, part in ipairs(mesh.parts) do
-            local material = part.material
-            local world = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
-
-            if name == "Drawer" then
-                world = world * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
-            end
-
-            lightmng:setMeshPartMatrix(part, world)
-
-            material.worldMatrix = world
-            material.viewProjectionMatrix = playerCam.viewProjectionMatrix
-
-            part:draw()
+        if name == "Drawer" then
+            drawerMesh = mesh
         end
     end
 
-    renderer:endDeferredRendering(deferredLightPassShader, playerCam.position, playerCam.viewMatrix, playerCam.projectionMatrix)
+    renderer:addLights(ambient, light)
+end
+
+function Game:draw()
+    for i, part in ipairs(drawerMesh.parts) do
+        local settings = renderer:getMeshpartSettings(part)
+        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
+    end
+
+    renderer:render(playerCam.position, playerCam.viewMatrix, playerCam.projectionMatrix)
 
     if lk.isDown("q") then
-        -- lg.draw(light.shadowmap)
     end
 
     lg.print("HDR exposure: "..hdrExposure, 0, 30)
@@ -122,7 +107,7 @@ function Game:update(dt)
     end
 
     playerCam.position.y = playerCam.position.y + (lk.isDown("space") and 1 or lk.isDown("lshift") and -1 or 0) * dt
-    playerCam.direction = Vector3(0,0,1):transform(camRotation)
+    playerCam.rotation = camRotation
 
     modelRot = modelRot + dt
 
@@ -131,7 +116,7 @@ function Game:update(dt)
     end
 
     if lm.isDown(1) then
-        light.position, light.direction = playerCam.position:clone(), playerCam.direction:clone()
+        light.position, light.direction = playerCam.position:clone(), Vector3(0,0,1):transform(camRotation)
     end
 end
 
