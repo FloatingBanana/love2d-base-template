@@ -16,6 +16,7 @@ local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
+local ColorCorrection  = require "engine.3DRenderer.postProcessing.colorCorrection"
 local Camera           = require "engine.camera3d"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
@@ -39,8 +40,13 @@ local renderer = nil
 local ssao = nil
 local hdr = nil
 local bloom = nil
+local colorCorr = nil
 
 local hdrExposure = 1
+local contrast = 1
+local brightness = 0
+local exposure = 1
+local saturation = 1
 
 local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
@@ -55,12 +61,14 @@ function Game:enter(from, ...)
     ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5)
     bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
     hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
+    colorCorr = ColorCorrection(Vector2(WIDTH, HEIGHT), contrast, brightness, exposure, saturation, Color(1,1,1))
 
     renderer = DeferredRenderer(Vector2(WIDTH, HEIGHT), {
         cloudSkybox,
         ssao,
         bloom,
-        hdr
+        hdr,
+        colorCorr
     })
 
     for name, mesh in pairs(myModel.meshes) do
@@ -90,6 +98,10 @@ function Game:draw()
     end
 
     lg.print("HDR exposure: "..hdrExposure, 0, 30)
+    lg.print("Contrast: "..contrast, 0, 60)
+    lg.print("Brightness: "..brightness, 0, 90)
+    lg.print("Exposure: "..exposure, 0, 120)
+    lg.print("Saturation: "..saturation, 0, 150)
 end
 
 local camRot = Vector3()
@@ -127,8 +139,22 @@ function Game:mousemoved(x, y, dx, dy)
 end
 
 function Game:wheelmoved(x, y)
-    hdrExposure = math.max(hdrExposure + y * 0.1, 0)
-    hdr:setExposure(hdrExposure)
+    if lk.isDown("1") then
+        contrast = math.max(contrast + y * 0.1, 0)
+        colorCorr:setContrast(contrast)
+    elseif lk.isDown("2") then
+        brightness = brightness + y * 0.1
+        colorCorr:setBrightness(brightness)
+    elseif lk.isDown("3") then
+        exposure = math.max(exposure + y * 0.1, 0)
+        colorCorr:setExposure(exposure)
+    elseif lk.isDown("4") then
+        saturation = math.max(saturation + y * 0.1, 0)
+        colorCorr:setSaturation(saturation)
+    else
+        hdrExposure = math.max(hdrExposure + y * 0.1, 0)
+        hdr:setExposure(hdrExposure)
+    end
 end
 
 function Game:keypressed(key)
