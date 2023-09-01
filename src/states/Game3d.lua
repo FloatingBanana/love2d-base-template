@@ -29,10 +29,10 @@ local myModel = Model("assets/models/untitled_uv.fbx", {
 
 local lockMouse = true
 
-local renderer = nil
-local ssao = nil
-local hdr = nil
-local bloom = nil
+local renderer = nil --- @type ForwardRenderer
+local ssao = nil     --- @type SSAO
+local hdr = nil      --- @type HDR
+local bloom = nil    --- @type Bloom
 local cloudSkybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
@@ -54,13 +54,13 @@ local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHI
 function Game:enter(from, ...)
     lm.setRelativeMode(lockMouse)
 
-    -- ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5)
+    ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5, "accurate")
     bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
     hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
 
     renderer = ForwardRenderer(Vector2(WIDTH, HEIGHT), {
         cloudSkybox,
-        -- ssao,
+        ssao,
         bloom,
         hdr
     })
