@@ -92,7 +92,7 @@ function Game:draw()
         settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
     end
 
-    renderer:render(playerCam.position, playerCam.viewMatrix, playerCam.projectionMatrix)
+    renderer:render(playerCam)
 
     if lk.isDown("q") then
     end
