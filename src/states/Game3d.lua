@@ -17,6 +17,7 @@ local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
+local FogClass         = require "engine.3DRenderer.postProcessing.fog"
 local Camera           = require "engine.camera3d"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
@@ -33,6 +34,7 @@ local renderer = nil --- @type ForwardRenderer
 local ssao = nil     --- @type SSAO
 local hdr = nil      --- @type HDR
 local bloom = nil    --- @type Bloom
+local fog = nil      --- @type Fog
 local cloudSkybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
@@ -44,7 +46,7 @@ local cloudSkybox = SkyboxClass({
 
 local hdrExposure = 1
 
-local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 100)
+local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 50)
 local modelRot = 0
 local drawerMesh = nil
 
@@ -57,10 +59,12 @@ function Game:enter(from, ...)
     ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5, "accurate")
     bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
     hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
+    -- fog = FogClass(Vector2(WIDTH, HEIGHT), 5, 100, Color(.4,.4,.4))
 
     renderer = ForwardRenderer(Vector2(WIDTH, HEIGHT), {
         cloudSkybox,
         ssao,
+        -- fog,
         bloom,
         hdr
     })
