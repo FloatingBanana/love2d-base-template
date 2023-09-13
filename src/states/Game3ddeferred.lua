@@ -19,6 +19,7 @@ local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
 local ColorCorrection  = require "engine.3DRenderer.postProcessing.colorCorrection"
 local FogClass         = require "engine.3DRenderer.postProcessing.fog"
 local FXAAClass        = require "engine.3DRenderer.postProcessing.fxaa"
+local MotionBlurClass  = require "engine.3DRenderer.postProcessing.motionBlur"
 local Camera           = require "engine.camera3d"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
@@ -45,6 +46,7 @@ local bloom = nil
 local colorCorr = nil
 local fog = nil
 local fxaa = nil
+local motionBlur = nil
 
 local hdrExposure = 1
 local contrast = 1
@@ -68,6 +70,7 @@ function Game:enter(from, ...)
     colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
     -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
     fxaa = FXAAClass(SCREENSIZE)
+    motionBlur = MotionBlurClass(SCREENSIZE, 5)
 
     renderer = DeferredRenderer(SCREENSIZE, {
         cloudSkybox,
@@ -76,6 +79,7 @@ function Game:enter(from, ...)
         bloom,
         hdr,
         fxaa,
+        motionBlur,
         colorCorr
     })
 
