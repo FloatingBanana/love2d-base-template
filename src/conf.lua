@@ -1,8 +1,12 @@
+local Vector2 = require "engine.math.vector2"
+
 WIDTH = 800
 HEIGHT = 600
+SCREENSIZE = Vector2(WIDTH, HEIGHT)
 
 CENTERX = WIDTH / 2
 CENTERY = HEIGHT / 2
+CENTERPOS = Vector2(CENTERX, CENTERY)
 
 function love.conf(t)
     t.identity = nil

@@ -62,14 +62,14 @@ local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHI
 function Game:enter(from, ...)
     lm.setRelativeMode(true)
 
-    ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5)
-    bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
-    hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
-    colorCorr = ColorCorrection(Vector2(WIDTH, HEIGHT), contrast, brightness, exposure, saturation, Color(1,1,1))
-    -- fog = FogClass(Vector2(WIDTH, HEIGHT), 5, 100, Color(.4,.4,.4))
-    fxaa = FXAAClass(Vector2(WIDTH, HEIGHT))
+    ssao = SSAOClass(SCREENSIZE, 32, 0.5)
+    bloom = BloomClass(SCREENSIZE, 6, 1)
+    hdr = HDRClass(SCREENSIZE, hdrExposure)
+    colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
+    -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
+    fxaa = FXAAClass(SCREENSIZE)
 
-    renderer = DeferredRenderer(Vector2(WIDTH, HEIGHT), {
+    renderer = DeferredRenderer(SCREENSIZE, {
         cloudSkybox,
         ssao,
         -- fog,

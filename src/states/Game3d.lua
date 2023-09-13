@@ -56,12 +56,12 @@ local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHI
 function Game:enter(from, ...)
     lm.setRelativeMode(lockMouse)
 
-    ssao = SSAOClass(Vector2(WIDTH, HEIGHT), 32, 0.5, "accurate")
-    bloom = BloomClass(Vector2(WIDTH, HEIGHT), 6, 1)
-    hdr = HDRClass(Vector2(WIDTH, HEIGHT), hdrExposure)
-    -- fog = FogClass(Vector2(WIDTH, HEIGHT), 5, 100, Color(.4,.4,.4))
+    ssao = SSAOClass(SCREENSIZE, 32, 0.5, "accurate")
+    bloom = BloomClass(SCREENSIZE, 6, 1)
+    hdr = HDRClass(SCREENSIZE, hdrExposure)
+    -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
 
-    renderer = ForwardRenderer(Vector2(WIDTH, HEIGHT), {
+    renderer = ForwardRenderer(SCREENSIZE, {
         cloudSkybox,
         ssao,
         -- fog,
