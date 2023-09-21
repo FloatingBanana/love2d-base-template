@@ -70,7 +70,7 @@ function Game:enter(from, ...)
     colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
     -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
     fxaa = FXAAClass(SCREENSIZE)
-    motionBlur = MotionBlurClass(SCREENSIZE, 5)
+    motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
 
     renderer = DeferredRenderer(SCREENSIZE, {
         cloudSkybox,
@@ -101,7 +101,7 @@ end
 function Game:draw()
     for i, part in ipairs(drawerMesh.parts) do
         local settings = renderer:getMeshpartSettings(part)
-        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
+        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot * 20, 0, 0)
     end
 
     renderer:render(playerCam)

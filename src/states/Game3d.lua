@@ -18,6 +18,7 @@ local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
 local FogClass         = require "engine.3DRenderer.postProcessing.fog"
+local MotionBlurClass  = require "engine.3DRenderer.postProcessing.motionBlur"
 local Camera           = require "engine.camera3d"
 
 local myModel = Model("assets/models/untitled_uv.fbx", {
@@ -35,6 +36,7 @@ local ssao = nil     --- @type SSAO
 local hdr = nil      --- @type HDR
 local bloom = nil    --- @type Bloom
 local fog = nil      --- @type Fog
+local motionBlur = nil      --- @type MotionBlur
 local cloudSkybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
@@ -59,6 +61,7 @@ function Game:enter(from, ...)
     ssao = SSAOClass(SCREENSIZE, 32, 0.5, "accurate")
     bloom = BloomClass(SCREENSIZE, 6, 1)
     hdr = HDRClass(SCREENSIZE, hdrExposure)
+    motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
     -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
 
     renderer = ForwardRenderer(SCREENSIZE, {
@@ -66,7 +69,8 @@ function Game:enter(from, ...)
         ssao,
         -- fog,
         bloom,
-        hdr
+        hdr,
+        motionBlur,
     })
 
     for name, mesh in pairs(myModel.meshes) do
