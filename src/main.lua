@@ -31,7 +31,7 @@ GLdebug = require "engine.openglDebug"
 local InputHelper = require "engine.inputHelper"
 local TransitionManager = require "engine.transitionManager"
 
-local Game = require "states.Game3ddeferred"
+local Game = require "states.Game3d"
 local Splash = require "states.Splash2"
 
 function love.load(args)

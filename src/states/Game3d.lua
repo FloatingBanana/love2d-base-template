@@ -2,7 +2,6 @@ local Game = {}
 
 local Matrix           = require "engine.math.matrix"
 local Vector3          = require "engine.math.vector3"
-local Vector2          = require "engine.math.vector2"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.inputHelper"
 local Model            = require "engine.3DRenderer.model"
@@ -10,34 +9,42 @@ local PointLight       = require "engine.3DRenderer.lights.pointLight"
 local SpotLight        = require "engine.3DRenderer.lights.spotLight"
 local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local AmbientLight     = require "engine.3DRenderer.lights.ambientLight"
-local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
+local DeferredMaterial = require "engine.3DRenderer.materials.deferredPhong"
 local ForwardMaterial  = require "engine.3DRenderer.materials.forwardRenderingMaterial"
+local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
+local DeferredRenderer = require "engine.3DRenderer.renderers.deferredRenderer"
 local ForwardRenderer  = require "engine.3DRenderer.renderers.forwardRenderer"
 local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
 local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
 local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
+local ColorCorrection  = require "engine.3DRenderer.postProcessing.colorCorrection"
 local FogClass         = require "engine.3DRenderer.postProcessing.fog"
+local FXAAClass        = require "engine.3DRenderer.postProcessing.fxaa"
 local MotionBlurClass  = require "engine.3DRenderer.postProcessing.motionBlur"
 local Camera           = require "engine.camera3d"
 
-local myModel = Model("assets/models/untitled_uv.fbx", {
-    materials = {
-        drawer = ForwardMaterial,
-        ground = ForwardMaterial,
-        emissive = EmissiveMaterial,
-    }
-})
+local useDeferredRendering = true
 
-local lockMouse = true
+local renderer = nil ---@type BaseRenderer
+local myModel = nil ---@type Model
 
-local renderer = nil --- @type ForwardRenderer
-local ssao = nil     --- @type SSAO
-local hdr = nil      --- @type HDR
-local bloom = nil    --- @type Bloom
-local fog = nil      --- @type Fog
-local motionBlur = nil      --- @type MotionBlur
-local cloudSkybox = SkyboxClass({
+local hdrExposure = 1
+local contrast = 1
+local brightness = 0
+local exposure = 1
+local saturation = 1
+
+
+-- Post processing effects
+local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
+local bloom = BloomClass(SCREENSIZE, 6, 1)
+local hdr = HDRClass(SCREENSIZE, hdrExposure)
+local colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
+-- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
+local fxaa = FXAAClass(SCREENSIZE)
+local motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
+local skybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
     "assets/images/skybox/top.jpg",
@@ -46,9 +53,8 @@ local cloudSkybox = SkyboxClass({
     "assets/images/skybox/back.jpg"
 })
 
-local hdrExposure = 1
 
-local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 50)
+local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
 local drawerMesh = nil
 
@@ -56,23 +62,42 @@ local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
 local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
-    lm.setRelativeMode(lockMouse)
+    lm.setRelativeMode(true)
 
-    ssao = SSAOClass(SCREENSIZE, 32, 0.5, "accurate")
-    bloom = BloomClass(SCREENSIZE, 6, 1)
-    hdr = HDRClass(SCREENSIZE, hdrExposure)
-    motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
-    -- fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
-
-    renderer = ForwardRenderer(SCREENSIZE, {
-        cloudSkybox,
+    local pplist = {
+        skybox,
         ssao,
         -- fog,
         bloom,
         hdr,
+        fxaa,
         motionBlur,
-    })
+        colorCorr
+    }
 
+
+    if useDeferredRendering then
+        myModel = Model("assets/models/untitled_uv.fbx", {
+            materials = {
+                default = DeferredMaterial,
+            }
+        })
+
+        renderer = DeferredRenderer(SCREENSIZE, pplist)
+    else
+        myModel = Model("assets/models/untitled_uv.fbx", {
+            materials = {
+                drawer = ForwardMaterial,
+                ground = ForwardMaterial,
+                emissive = EmissiveMaterial,
+            }
+        })
+
+        renderer = ForwardRenderer(SCREENSIZE, pplist)
+    end
+
+
+    -- Adding meshes to the scene
     for name, mesh in pairs(myModel.meshes) do
         local isEmissive = (name == "light1" or name == "light2")
 
@@ -87,18 +112,26 @@ function Game:enter(from, ...)
         end
     end
 
-    renderer:addLights(ambient, light, light2)
+    renderer:addLights(ambient, light)
 end
 
 function Game:draw()
     for i, part in ipairs(drawerMesh.parts) do
         local settings = renderer:getMeshpartSettings(part)
-        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
+        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot * 20, 0, 0)
     end
 
     renderer:render(playerCam)
 
+    if lk.isDown("q") then
+        lg.draw(renderer.velocityBuffer)
+    end
+
     lg.print("HDR exposure: "..hdrExposure, 0, 30)
+    lg.print("Contrast: "..contrast, 0, 60)
+    lg.print("Brightness: "..brightness, 0, 90)
+    lg.print("Exposure: "..exposure, 0, 120)
+    lg.print("Saturation: "..saturation, 0, 150)
 end
 
 local camRot = Vector3()
@@ -136,15 +169,28 @@ function Game:mousemoved(x, y, dx, dy)
 end
 
 function Game:wheelmoved(x, y)
-    hdrExposure = math.max(hdrExposure + y * 0.1, 0)
-    hdr:setExposure(hdrExposure)
+    local offset = y * (lk.isDown("tab") and 0.01 or 0.1)
+
+    if lk.isDown("1") then
+        contrast = math.max(contrast + offset, 0)
+        colorCorr:setContrast(contrast)
+    elseif lk.isDown("2") then
+        brightness = brightness + offset
+        colorCorr:setBrightness(brightness)
+    elseif lk.isDown("3") then
+        exposure = math.max(exposure + offset, 0)
+        colorCorr:setExposure(exposure)
+    elseif lk.isDown("4") then
+        saturation = math.max(saturation + offset, 0)
+        colorCorr:setSaturation(saturation)
+    else
+        hdrExposure = math.max(hdrExposure + offset, 0)
+        hdr:setExposure(hdrExposure)
+    end
 end
 
 function Game:keypressed(key)
-    if key == "f1" then
-        lockMouse = not lockMouse
-        lm.setRelativeMode(lockMouse)
-    end
+
 end
 
 function Game:keyreleased(key)
