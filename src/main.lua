@@ -42,7 +42,8 @@ function love.load(args)
     GS.switch(Game)
 end
 
-function love.draw()
+
+function love.draw() ---@diagnostic disable-line: duplicate-set-field
     GS.draw()
 
     TransitionManager.draw()
