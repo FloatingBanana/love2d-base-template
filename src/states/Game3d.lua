@@ -5,7 +5,7 @@ local Matrix           = require "engine.math.matrix"
 local Vector3          = require "engine.math.vector3"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.inputHelper"
-local Model            = require "engine.3DRenderer.model"
+local Model            = require "src.engine.3DRenderer.model.model"
 local Camera           = require "engine.camera3d"
 
 local PointLight       = require "engine.3DRenderer.lights.pointLight"
