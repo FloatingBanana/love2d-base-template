@@ -83,25 +83,27 @@ function Game:enter(from, ...)
     }
 
 
+    local materials
     if useDeferredRendering then
-        myModel = Model("assets/models/untitled_uv.fbx", {
-            materials = {
-                default = DeferredMaterial,
-            }
-        })
+        materials = {
+            default = DeferredMaterial,
+        }
 
         renderer = DeferredRenderer(SCREENSIZE, pplist)
     else
-        myModel = Model("assets/models/untitled_uv.fbx", {
-            materials = {
-                drawer = ForwardMaterial,
-                ground = ForwardMaterial,
-                emissive = EmissiveMaterial,
-            }
-        })
+        materials = {
+            drawer = ForwardMaterial,
+            ground = ForwardMaterial,
+            emissive = EmissiveMaterial,
+        }
 
         renderer = ForwardRenderer(SCREENSIZE, pplist)
     end
+
+    myModel = Model("assets/models/untitled_uv.fbx", {
+        materials = materials,
+        flags = {"triangulate", "sort by p type", "optimize meshes", "flip uvs", "calc tangent space"}
+    })
 
 
     -- Adding meshes to the scene
@@ -295,6 +297,8 @@ function Game:debugGui()
                                 if Imgui.SliderFloat("Quadratic", floatPtr, 0, 2) then
                                     light.quadratic = floatPtr[0]
                                 end
+
+                                Imgui.Text("Radius: "..light:getLightRadius())
                             end
 
                             if Imgui.TreeNode_Str("Shadow map") then
