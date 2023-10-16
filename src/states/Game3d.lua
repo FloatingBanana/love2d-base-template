@@ -3,6 +3,7 @@ local Game = {}
 local ffi              = require "ffi"
 local Matrix           = require "engine.math.matrix"
 local Vector3          = require "engine.math.vector3"
+local Vector4          = require "engine.math.vector4"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.inputHelper"
 local Model            = require "src.engine.3DRenderer.model.model"
@@ -131,6 +132,13 @@ function Game:draw()
     end
 
     renderer:render(playerCam)
+
+    local pos = Vector4(light2.position.x, light2.position.y, light2.position.z, 1) * playerCam.viewProjectionMatrix
+    local lpos = Vector3(pos.x, pos.y * -1, pos.z):divide(pos.w):multiply(0.5):add(0.5)
+
+    if lpos.z > 0 and lpos.z < 1 then
+        lg.circle("fill", lpos.x * WIDTH, lpos.y * HEIGHT, 400 * (1-lpos.z))
+    end
 
     if lk.isDown("q") then
         lg.draw(renderer.velocityBuffer)
