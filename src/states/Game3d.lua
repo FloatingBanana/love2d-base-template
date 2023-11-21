@@ -6,8 +6,10 @@ local Vector3          = require "engine.math.vector3"
 local Vector4          = require "engine.math.vector4"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.inputHelper"
-local Model            = require "src.engine.3DRenderer.model.model"
+local Model            = require "engine.3DRenderer.model.model"
 local Camera           = require "engine.camera3d"
+local Mesh             = require "engine.3DRenderer.model.modelMesh"
+local Meshpart         = require "engine.3DRenderer.model.meshpart"
 
 local PointLight       = require "engine.3DRenderer.lights.pointLight"
 local SpotLight        = require "engine.3DRenderer.lights.spotLight"
@@ -34,6 +36,7 @@ local MotionBlurClass  = require "engine.3DRenderer.postProcessing.motionBlur"
 
 local renderer = nil ---@type BaseRenderer
 local myModel = nil ---@type Model
+local personAnimator = nil --- @type ModelAnimator
 
 local lockControls = true
 local useDeferredRendering = true
@@ -64,7 +67,6 @@ local skybox = SkyboxClass({
 
 local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
-local drawerMesh = nil
 
 local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
@@ -93,19 +95,20 @@ function Game:enter(from, ...)
         renderer = DeferredRenderer(SCREENSIZE, pplist)
     else
         materials = {
-            drawer = ForwardMaterial,
-            ground = ForwardMaterial,
+            default = ForwardMaterial,
             emissive = EmissiveMaterial,
         }
 
         renderer = ForwardRenderer(SCREENSIZE, pplist)
     end
 
-    myModel = Model("assets/models/untitled_uv.fbx", {
+    myModel = Model("assets/models/untitled.fbx", {
         materials = materials,
         flags = {"triangulate", "sort by p type", "optimize meshes", "flip uvs", "calc tangent space"}
     })
 
+    personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
+    personAnimator:play()
 
     -- Adding meshes to the scene
     for name, mesh in pairs(myModel.meshes) do
@@ -114,21 +117,21 @@ function Game:enter(from, ...)
         renderer:addMeshPart(mesh.parts, {
             castShadows = not isEmissive,
             ignoreLighting = isEmissive,
-            worldMatrix = mesh.transformation * Matrix.CreateScale(Vector3(0.01))
+            worldMatrix = mesh:getGlobalMatrix()
         })
+    end
 
-        if name == "Drawer" then
-            drawerMesh = mesh
-        end
+    for name, part in ipairs(myModel.meshes.Person.parts) do
+        renderer:getMeshpartSettings(part).animator = personAnimator
     end
 
     renderer:addLights(ambient, light, light2)
 end
 
 function Game:draw()
-    for i, part in ipairs(drawerMesh.parts) do
+    for i, part in ipairs(myModel.meshes.Drawer.parts) do
         local settings = renderer:getMeshpartSettings(part)
-        settings.worldMatrix = drawerMesh.transformation * Matrix.CreateScale(Vector3(0.01)) * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
+        settings.worldMatrix = myModel.meshes.Drawer:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
     end
 
     renderer:render(playerCam)
@@ -139,15 +142,14 @@ function Game:draw()
     if lpos.z > 0 and lpos.z < 1 then
         lg.circle("fill", lpos.x * WIDTH, lpos.y * HEIGHT, 400 * (1-lpos.z))
     end
-
-    if lk.isDown("q") then
-        lg.draw(renderer.velocityBuffer)
-    end
 end
+
 
 local camRot = Vector3()
 function Game:update(dt)
     modelRot = modelRot + dt
+
+    personAnimator:update(dt)
 
     if lockControls then
         local walkdir = Vector3(
@@ -172,9 +174,7 @@ function Game:update(dt)
         if lm.isDown(1) then
             light.position, light.direction = playerCam.position:clone(), Vector3(0,0,1):transform(camRotation)
         end
-    end
-
-    if not lockControls then
+    else
         Game:debugGui()
     end
 end
@@ -214,8 +214,35 @@ local intPtr = ffi.new("int[1]")
 local floatPtr = ffi.new("float[3]")
 local strArrayPtr = ffi.new("const char*[3]")
 
+local isDemoWindowOpen = ffi.new("bool[1]", false)
+local isSceneWindowOpen = ffi.new("bool[1]", true)
+
+--- @param node ModelNode
+local function renderTree(node)
+    local flag = #node.children == 0 and Imgui.ImGuiTreeNodeFlags_Leaf or Imgui.ImGuiTreeNodeFlags_None
+    local nodeType = node:is(Mesh) and "Mesh" or node:is(Meshpart) and "Mesh Part" or "Empty"
+
+    if Imgui.TreeNodeEx_Str(("%s (%s)"):format(node.name, nodeType), flag) then
+        for i, child in ipairs(node.children) do
+            renderTree(child)
+        end
+        Imgui.TreePop()
+    end
+end
+
+---@diagnostic disable invisible
 function Game:debugGui()
-    if Imgui.Begin("3D Scene", nil, Imgui.ImGuiWindowFlags_None) then
+    if Imgui.BeginMainMenuBar() then
+        if Imgui.BeginMenu("Windows") then
+            Imgui.MenuItem_BoolPtr("Show scene window", nil, isSceneWindowOpen, true)
+            Imgui.MenuItem_BoolPtr("Show demo window", nil, isDemoWindowOpen, true)
+
+            Imgui.EndMenu()
+        end
+        Imgui.EndMainMenuBar()
+    end
+
+    if isSceneWindowOpen[0] and Imgui.Begin("3D Scene", isSceneWindowOpen, Imgui.ImGuiWindowFlags_None) then
         if Imgui.BeginTabBar("tabs", Imgui.ImGuiTabBarFlags_None) then
 
             if Imgui.BeginTabItem("General") then
@@ -234,6 +261,37 @@ function Game:debugGui()
                     playerCam.fov = math.rad(floatPtr[0])
                 end
 
+                Imgui.Separator()
+
+                if renderer:is(DeferredRenderer) then ---@cast renderer DeferredRenderer
+                    if Imgui.TreeNode_Str("Deferred renderer") then
+                        Imgui.SeparatorText("G-buffer")
+                        local imgSize = Imgui.ImVec2_Float(128, 128)
+
+                        Imgui.Image(renderer.gbuffer.position, imgSize)
+                        Imgui.SetItemTooltip("Position")
+                        Imgui.SameLine()
+                        
+                        Imgui.Image(renderer.gbuffer.normal, imgSize)
+                        Imgui.SetItemTooltip("Normal")
+                        Imgui.SameLine()
+
+                        Imgui.Image(renderer.gbuffer.albedoSpec, imgSize)
+                        Imgui.SetItemTooltip("Albedo + specular")
+                        Imgui.SameLine()
+
+                        Imgui.TreePop()
+                    end
+                end
+
+                Imgui.EndTabItem()
+            end
+
+            if Imgui.BeginTabItem("Models") then
+                if Imgui.TreeNode_Str("Scene") then
+                    renderTree(myModel.rootNode)
+                    Imgui.TreePop()
+                end
                 Imgui.EndTabItem()
             end
 
@@ -427,6 +485,11 @@ function Game:debugGui()
         end
     end
     Imgui.End()
+
+    if isDemoWindowOpen[0] then
+        Imgui.ShowDemoWindow(isDemoWindowOpen)
+    end
 end
+---@diagnostic enable invisible
 
 return Game
