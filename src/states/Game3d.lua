@@ -17,11 +17,11 @@ local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
 local AmbientLight     = require "engine.3DRenderer.lights.ambientLight"
 
 local DeferredRenderer = require "engine.3DRenderer.renderers.deferredRenderer"
-local DeferredMaterial = require "engine.3DRenderer.materials.deferredPhong"
+local DeferredMaterial = require "engine.3DRenderer.materials.deferredMaterial"
 
 local ForwardRenderer  = require "engine.3DRenderer.renderers.forwardRenderer"
-local ForwardMaterial  = require "engine.3DRenderer.materials.forwardRenderingMaterial"
-local EmissiveMaterial = require "engine.3DRenderer.materials.emissiveMaterial"
+local ForwardMaterial  = require "engine.3DRenderer.materials.forwardMaterial"
+local EmissiveMaterial = require "engine.3DRenderer.materials.forwardEmissiveMaterial"
 
 local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
 local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
