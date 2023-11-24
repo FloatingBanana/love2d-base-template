@@ -5,32 +5,32 @@ local Matrix           = require "engine.math.matrix"
 local Vector3          = require "engine.math.vector3"
 local Vector4          = require "engine.math.vector4"
 local Quaternion       = require "engine.math.quaternion"
-local InputHelper      = require "engine.inputHelper"
-local Model            = require "engine.3DRenderer.model.model"
-local Camera           = require "engine.camera3d"
-local Mesh             = require "engine.3DRenderer.model.modelMesh"
-local Meshpart         = require "engine.3DRenderer.model.meshpart"
+local InputHelper      = require "engine.misc.inputHelper"
+local Model            = require "engine.3D.model.model"
+local Camera           = require "engine.misc.camera3d"
+local Mesh             = require "engine.3D.model.modelMesh"
+local Meshpart         = require "engine.3D.model.meshpart"
 
-local PointLight       = require "engine.3DRenderer.lights.pointLight"
-local SpotLight        = require "engine.3DRenderer.lights.spotLight"
-local DirectionalLight = require "engine.3DRenderer.lights.directionalLight"
-local AmbientLight     = require "engine.3DRenderer.lights.ambientLight"
+local PointLight       = require "engine.3D.lights.pointLight"
+local SpotLight        = require "engine.3D.lights.spotLight"
+local DirectionalLight = require "engine.3D.lights.directionalLight"
+local AmbientLight     = require "engine.3D.lights.ambientLight"
 
-local DeferredRenderer = require "engine.3DRenderer.renderers.deferredRenderer"
-local DeferredMaterial = require "engine.3DRenderer.materials.deferredMaterial"
+local DeferredRenderer = require "engine.3D.renderers.deferredRenderer"
+local DeferredMaterial = require "engine.3D.materials.deferredMaterial"
 
-local ForwardRenderer  = require "engine.3DRenderer.renderers.forwardRenderer"
-local ForwardMaterial  = require "engine.3DRenderer.materials.forwardMaterial"
-local EmissiveMaterial = require "engine.3DRenderer.materials.forwardEmissiveMaterial"
+local ForwardRenderer  = require "engine.3D.renderers.forwardRenderer"
+local ForwardMaterial  = require "engine.3D.materials.forwardMaterial"
+local EmissiveMaterial = require "engine.3D.materials.forwardEmissiveMaterial"
 
-local SkyboxClass      = require "engine.3DRenderer.postProcessing.skybox"
-local SSAOClass        = require "engine.3DRenderer.postProcessing.ssao"
-local BloomClass       = require "engine.3DRenderer.postProcessing.bloom"
-local HDRClass         = require "engine.3DRenderer.postProcessing.hdr"
-local ColorCorrection  = require "engine.3DRenderer.postProcessing.colorCorrection"
-local FogClass         = require "engine.3DRenderer.postProcessing.fog"
-local FXAAClass        = require "engine.3DRenderer.postProcessing.fxaa"
-local MotionBlurClass  = require "engine.3DRenderer.postProcessing.motionBlur"
+local SkyboxClass      = require "engine.postProcessing.skybox"
+local SSAOClass        = require "engine.postProcessing.ssao"
+local BloomClass       = require "engine.postProcessing.bloom"
+local HDRClass         = require "engine.postProcessing.hdr"
+local ColorCorrection  = require "engine.postProcessing.colorCorrection"
+local FogClass         = require "engine.postProcessing.fog"
+local FXAAClass        = require "engine.postProcessing.fxaa"
+local MotionBlurClass  = require "engine.postProcessing.motionBlur"
 
 
 
@@ -86,18 +86,14 @@ function Game:enter(from, ...)
     }
 
 
-    local materials
+    local materials = {}
     if useDeferredRendering then
-        materials = {
-            default = DeferredMaterial,
-        }
+        materials.default = DeferredMaterial
 
         renderer = DeferredRenderer(SCREENSIZE, pplist)
     else
-        materials = {
-            default = ForwardMaterial,
-            emissive = EmissiveMaterial,
-        }
+        materials.default = ForwardMaterial
+        materials.emissive = EmissiveMaterial
 
         renderer = ForwardRenderer(SCREENSIZE, pplist)
     end

@@ -1,5 +1,5 @@
 local Vector2 = require "engine.math.vector2"
-local InputHelper = require "engine.inputHelper"
+local InputHelper = require "engine.misc.inputHelper"
 local Body = require "entities.body"
 local Player = Body:extend()
 

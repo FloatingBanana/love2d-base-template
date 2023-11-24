@@ -1,10 +1,10 @@
 local Game = {}
 
 local Vector2 = require "engine.math.vector2"
-local Camera = require "engine.camera"
+local Camera = require "engine.misc.camera"
 local PathfinderGrid = require "engine.AI.pathfinding.pathfindingGrid"
 local Astar = require "engine.AI.pathfinding.astarFinder"
-local EM = require "engine.entityManager"
+local EM = require "engine.misc.entityManager"
 
 -- Entities
 local Player = require "entities.player"

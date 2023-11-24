@@ -1,4 +1,4 @@
-local InputHelper = require "engine.inputHelper"
+local InputHelper = require "engine.misc.inputHelper"
 local Vector2     = require "engine.math.vector2"
 
 local PlayerMovement = Concord.system({

@@ -24,13 +24,13 @@ Concord = require "libs.concord"
 Color = require "libs.color"
 Imgui = require "libs.cimgui"
 
-Utils = require "engine.utils"
-DebugUtils = require "engine.debugUtils"
-GLdebug = require "engine.openglDebug"
+Utils = require "engine.misc.init"
+DebugUtils = require "engine.debug.debugUtils"
+GLdebug = require "engine.debug.openglDebug"
 
 -- Misc
-local InputHelper = require "engine.inputHelper"
-local TransitionManager = require "engine.transitionManager"
+local InputHelper = require "engine.misc.inputHelper"
+local TransitionManager = require "engine.transitions.transitionManager"
 
 local Game = require "states.Game3d"
 local Splash = require "states.Splash2"

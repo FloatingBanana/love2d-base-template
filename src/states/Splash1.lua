@@ -2,8 +2,8 @@ local Splash = {}
 
 local Game = require "states.Game"
 
-local TransitionManager = require "engine.transitionManager"
-local Fade = require "engine.transitionManager.transitions.fade"
+local TransitionManager = require "engine.transitions.transitionManager"
+local Fade = require "engine.transitions.fade"
 
 local heartImg = lg.newImage("assets/images/love_heart.png")
 local backImg = lg.newImage("assets/images/love_back.png")
