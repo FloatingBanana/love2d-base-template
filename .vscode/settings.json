@@ -3,7 +3,9 @@
         "lowercase-global",
         "redundant-parameter",
         "unbalanced-assignments",
-        "deprecated"
+        "need-check-nil",
+        "duplicate-set-field",
+        "inject-field"
     ],
     "Lua.runtime.version": "LuaJIT",
     "Lua.workspace.library": [
