@@ -24,7 +24,7 @@ Concord = require "libs.concord"
 Color = require "libs.color"
 Imgui = require "libs.cimgui"
 
-Utils = require "engine.misc.init"
+Utils = require "engine.misc.utils"
 DebugUtils = require "engine.debug.debugUtils"
 GLdebug = require "engine.debug.openglDebug"
 
