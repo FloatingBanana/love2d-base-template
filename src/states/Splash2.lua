@@ -41,14 +41,14 @@ function Splash:enter(from)
 end
 
 function Splash:draw()
-	Utils.setFont("handy_andy", 28)
+	Utils.setFont("assets/fonts/handy_andy.ttf", 28)
 	lg.setColor(opacity)
 	lg.printf("Made with", 0, CENTERY-40, WIDTH, "center")
 
-	Utils.setFont("handy_andy", 60)
+	Utils.setFont("assets/fonts/handy_andy.ttf", 60)
 	lg.printf("LÖVE", 0, CENTERY-5, WIDTH, "center")
 
-	Utils.setFont("handy_andy", 40)
+	Utils.setFont("assets/fonts/handy_andy.ttf", 40)
 	lg.setColor(opacity2)
 	lg.printf("By FloatingBanana", 0, CENTERY+150, WIDTH, "center")
 

@@ -43,10 +43,10 @@ end
 function Splash:draw()
 	lg.setColor(1,1,1,1)
 
-    Utils.setFont("handy_andy", 28)
+    Utils.setFont("assets/fonts/handy_andy.ttf", 28)
 	lg.printf("Made with", text.x, CENTERY-40, 400, "center")
 
-	Utils.setFont("handy_andy", 60)
+	Utils.setFont("assets/fonts/handy_andy.ttf", 60)
 	lg.printf("LÖVE", text.x, CENTERY-5, 400, "center")
 
 	lg.setColor(0,0,0,1)
@@ -57,11 +57,11 @@ function Splash:draw()
 	lg.draw(heartImg, heart.x, heart.y, heart.r, .3, .3, heartImg:getWidth()/2, heartImg:getHeight()/2)
 
     -- Left text
-	Utils.setFont("handy_andy", 30)
+	Utils.setFont("assets/fonts/handy_andy.ttf", 30)
 	lg.printf("By FloatingBanana", 0, text2.y, CENTERX, "center")
 
     -- Right text
-	Utils.setFont("polished", 30)
+	Utils.setFont("assets/fonts/polished.ttf", 30)
 	lg.printf("Game JaaJ V", CENTERX, text2.y, CENTERX, "center")
 end
 
