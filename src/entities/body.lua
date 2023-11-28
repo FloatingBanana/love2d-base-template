@@ -12,8 +12,8 @@ function Body:new(world, position, size, layer)
 end
 
 function Body:draw()
-    lg.setColor(1,1,1,1)
-    lg.rectangle("fill", self.world:getRect(self))
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.rectangle("fill", self.world:getRect(self))
 end
 
 function Body:moveTo(target, filter)
@@ -32,6 +32,6 @@ function Body:move(offset, filter)
 end
 
 -- Callbacks
-Body.onCollision = NULLFUNC
+Body.onCollision = function()end
 
 return Body

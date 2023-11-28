@@ -3,15 +3,6 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
     require("lldebugger").start()
 end
 
-NULLFUNC = function()end
-
--- Aliases
-lg = love.graphics
-la = love.audio
-lm = love.mouse
-lk = love.keyboard
-lfs = love.filesystem
-
 -- Libs
 GS = require "libs.gamestate"
 Timer = require "libs.timer"
@@ -24,11 +15,9 @@ Concord = require "libs.concord"
 Color = require "libs.color"
 Imgui = require "libs.cimgui"
 
-Utils = require "engine.misc.utils"
-DebugUtils = require "engine.debug.debugUtils"
-GLdebug = require "engine.debug.openglDebug"
 
 -- Misc
+local Utils = require "engine.misc.utils"
 local InputHelper = require "engine.misc.inputHelper"
 local TransitionManager = require "engine.transitions.transitionManager"
 
@@ -55,8 +44,8 @@ function love.draw() ---@diagnostic disable-line: duplicate-set-field
     Imgui.love.RenderDrawLists()
 
     Utils.setFont(13)
-    lg.setColor(1,1,1,1)
-    lg.print("FPS: " .. love.timer.getFPS())
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print("FPS: " .. love.timer.getFPS())
 end
 
 function love.update(dt)

@@ -1,12 +1,13 @@
 local Splash = {}
-
-local Game = require "states.Game"
+lg = love.graphics
 
 local heartImg = lg.newImage("assets/images/love_heart.png")
 local backImg = lg.newImage("assets/images/love_back.png")
 
 local TransitionManager = require "engine.transitions.transitionManager"
 local Fade = require "engine.transitions.fade"
+local Utils = require "engine.misc.utils"
+local Game = require "states.Game"
 
 local heart    = {x = CENTERX, y = CENTERY, s = 0}
 local back     = {x = CENTERX, y = CENTERY, s = 0, r = 0}

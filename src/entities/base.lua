@@ -6,6 +6,6 @@ function Base:new(position, layer)
     assert(layer, "invalid layer")
 end
 
-Base.onRemove = NULLFUNC
+Base.onRemove = function()end
 
 return Base

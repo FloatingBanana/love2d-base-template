@@ -31,13 +31,13 @@ function LT:enter()
 end
 
 function LT:draw()
-    lg.clear(Color("#6495ed") * 0.5)
-    lg.setColor(1,1,1,1)
-    lg.circle("fill", light.position.x, light.position.y, 10)
+    love.graphics.clear(Color("#6495ed") * 0.5)
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.circle("fill", light.position.x, light.position.y, 10)
 
-    lg.setColor(0,0,1,1)
-    lg.polygon("line", body)
-    lg.polygon("line", body2)
+    love.graphics.setColor(0,0,1,1)
+    love.graphics.polygon("line", body)
+    love.graphics.polygon("line", body2)
 
     lighting:renderLighting()
 end
@@ -49,7 +49,7 @@ function LT:update(dt)
     )
 
     light.position = light.position + walk * (100 * dt)
-    light2.position = Vector2(lm.getPosition())
+    light2.position = Vector2(love.mouse.getPosition())
 end
 
 return LT

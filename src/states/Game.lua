@@ -38,28 +38,30 @@ function Game:draw()
     camera:attach()
 
     for entity in pairs(EM.entities) do
-        Draworder.queue(entity.layer, entity.draw or NULLFUNC, entity)
+        if entity.draw then
+            Draworder.queue(entity.layer, entity.draw, entity)
+        end
     end
 
     Draworder.present() --- @diagnostic disable-line
     camera:detach()
 
     local startPos = (playerObj.position / 32):floor()
-    local endPos = Vector2(lm.getPosition()):divide(32):floor()
+    local endPos = Vector2(love.mouse.getPosition()):divide(32):floor()
     local path = finder:findPath(grid, startPos, endPos)
 
     if path then
         for i, pos in ipairs(path) do
-            lg.setColor(1,1,1,1)
-            lg.rectangle("line", pos.x * 32, pos.y * 32, 32, 32)
+            love.graphics.setColor(1,1,1,1)
+            love.graphics.rectangle("line", pos.x * 32, pos.y * 32, 32, 32)
         end
     end
 
     for i, pos in ipairs(finder.searched) do
-        lg.setColor(1,0,0,0.1)
-        lg.rectangle("fill", pos.x * 32, pos.y * 32, 32, 32)
+        love.graphics.setColor(1,0,0,0.1)
+        love.graphics.rectangle("fill", pos.x * 32, pos.y * 32, 32, 32)
     end
-    lg.setColor(1,1,1,1)
+    love.graphics.setColor(1,1,1,1)
 end
 
 function Game:update(dt)

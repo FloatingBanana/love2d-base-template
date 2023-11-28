@@ -72,7 +72,7 @@ local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
 local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
 function Game:enter(from, ...)
-    lm.setRelativeMode(lockControls)
+    love.mouse.setRelativeMode(lockControls)
 
     local pplist = {
         skybox,
@@ -136,7 +136,7 @@ function Game:draw()
     local lpos = Vector3(pos.x, pos.y * -1, pos.z):divide(pos.w):multiply(0.5):add(0.5)
 
     if lpos.z > 0 and lpos.z < 1 then
-        lg.circle("fill", lpos.x * WIDTH, lpos.y * HEIGHT, 400 * (1-lpos.z))
+        love.graphics.circle("fill", lpos.x * WIDTH, lpos.y * HEIGHT, 400 * (1-lpos.z))
     end
 end
 
@@ -160,14 +160,14 @@ function Game:update(dt)
             playerCam.position:add(walkdir:normalize():transform(camRotation) * dt)
         end
 
-        playerCam.position.y = playerCam.position.y + (lk.isDown("space") and 1 or lk.isDown("lshift") and -1 or 0) * dt
+        playerCam.position.y = playerCam.position.y + (love.keyboard.isDown("space") and 1 or love.keyboard.isDown("lshift") and -1 or 0) * dt
         playerCam.rotation = camRotation
 
-        if lm.isDown(2) then
+        if love.mouse.isDown(2) then
             light2.position = playerCam.position:clone()
         end
 
-        if lm.isDown(1) then
+        if love.mouse.isDown(1) then
             light.position, light.direction = playerCam.position:clone(), Vector3(0,0,1):transform(camRotation)
         end
     else
@@ -184,7 +184,7 @@ end
 function Game:keypressed(key)
     if key == "f1" then
         lockControls = not lockControls
-        lm.setRelativeMode(lockControls)
+        love.mouse.setRelativeMode(lockControls)
     end
 end
 

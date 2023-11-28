@@ -7,8 +7,8 @@ function CollidableRenderer:draw()
         local collidable = entity.collidable
         local world = collidable.world
 
-        lg.setColor(1, 1, 1, 1)
-        lg.rectangle("fill", world:getRect(collidable))
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.rectangle("fill", world:getRect(collidable))
     end
 end
 

@@ -11,11 +11,11 @@ function SpriteRenderer:draw()
         local transform = entity.transform
         local sprite = entity.sprite
 
-        lg.setShader(sprite.shader)
+        love.graphics.setShader(sprite.shader)
 
         if sprite.quad then
             self.draworder.queue(
-                lg.draw,
+                love.graphics.draw,
                 sprite.layer,
 
                 sprite.image,
@@ -32,7 +32,7 @@ function SpriteRenderer:draw()
             )
         else
             self.draworder.queue(
-                lg.draw,
+                love.graphics.draw,
                 sprite.layer,
 
                 sprite.image,
@@ -48,7 +48,7 @@ function SpriteRenderer:draw()
             )
         end
 
-        lg.setShader()
+        love.graphics.setShader()
     end
 end
 
