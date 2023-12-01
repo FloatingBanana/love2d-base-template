@@ -32,6 +32,8 @@ local FogClass         = require "engine.postProcessing.fog"
 local FXAAClass        = require "engine.postProcessing.fxaa"
 local MotionBlurClass  = require "engine.postProcessing.motionBlur"
 
+local Color = require "libs.color"
+local Imgui = require "libs.cimgui"
 
 
 local renderer = nil ---@type BaseRenderer

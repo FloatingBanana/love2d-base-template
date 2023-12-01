@@ -1,3 +1,5 @@
+local Concord = require "libs.concord"
+
 Concord.component("sprite", function(comp, image, quad, shader, rotation, scale, offset)
     comp.image = image
     comp.quad = quad

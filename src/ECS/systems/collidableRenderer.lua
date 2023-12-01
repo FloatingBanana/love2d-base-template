@@ -1,3 +1,5 @@
+local Concord = require "libs.concord"
+
 local CollidableRenderer = Concord.system({
     pool = {"collidable"}
 })

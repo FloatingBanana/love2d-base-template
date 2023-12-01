@@ -2,6 +2,7 @@
 local inputHelper = require "engine.misc.inputHelper"
 local Vector2     = require "engine.math.vector2"
 local PolyShadow  = require "engine.2D.polygonShadowLighting"
+local Color       = require "libs.color"
 local LT = {}
 
 local light = nil

@@ -1,3 +1,6 @@
+local Draworder = require "libs.draworder"
+local Concord   = require "libs.concord"
+
 local SpriteRenderer = Concord.system({
     pool = {"transform", "sprite"}
 })

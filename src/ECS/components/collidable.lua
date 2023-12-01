@@ -1,3 +1,5 @@
+local Concord = require "libs.concord"
+
 Concord.component("collidable", function(comp, world, position, size)
     comp.world = world
     comp.size = size

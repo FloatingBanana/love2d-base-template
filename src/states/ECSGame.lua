@@ -1,5 +1,7 @@
 local Vector2 = require "engine.math.vector2"
-local Game = {}
+local Bump    = require "libs.bump"
+local Concord = require "libs.concord"
+local Game    = {}
 
 local Systems = {}
 Concord.utils.loadNamespace("ECS/components")

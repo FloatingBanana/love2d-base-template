@@ -2,9 +2,12 @@ local Splash = {}
 local lg = love.graphics
 
 local TransitionManager = require "engine.transitions.transitionManager"
-local Fade = require "engine.transitions.fade"
+local Fade  = require "engine.transitions.fade"
 local Utils = require "engine.misc.utils"
-local Game = require "states.Game"
+local Color = require "libs.color"
+local Timer = require "libs.timer"
+local GS    = require "libs.gamestate"
+local Game  = require "states.Game"
 
 local heartImg = lg.newImage("assets/images/love_heart.png")
 local backImg = lg.newImage("assets/images/love_back.png")
@@ -39,6 +42,10 @@ function Splash:enter(from, ...)
 
 		GS.switch(Game)
 	end)
+end
+
+function Splash:update(dt)
+	Timer.update(dt)
 end
 
 function Splash:draw()

@@ -3,20 +3,9 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
     require("lldebugger").start()
 end
 
--- Libs
-GS = require "libs.gamestate"
-Timer = require "libs.timer"
-Lume = require "libs.lume"
-Object = require "libs.classic.classic"
-Bump = require "libs.bump"
-Anim8 = require "libs.anim8"
-Draworder = require "libs.draworder"
-Concord = require "libs.concord"
-Color = require "libs.color"
-Imgui = require "libs.cimgui"
-
-
 -- Misc
+local GS = require "libs.gamestate"
+local Imgui = require "libs.cimgui"
 local Utils = require "engine.misc.utils"
 local InputHelper = require "engine.misc.inputHelper"
 local TransitionManager = require "engine.transitions.transitionManager"
@@ -53,7 +42,6 @@ function love.update(dt)
     Imgui.NewFrame()
 
     TransitionManager.update(dt)
-    Timer.update(dt)
 end
 
 
