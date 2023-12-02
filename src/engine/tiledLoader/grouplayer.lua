@@ -1,3 +1,0 @@
-local grouplayer = {}
-
-return grouplayer
