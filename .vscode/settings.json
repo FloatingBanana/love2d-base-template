@@ -19,8 +19,9 @@
     ],
     "glsllint.glslangValidatorArgs": "--glsl-version 330 --D Texel=texture2D",
     "Lua.diagnostics.disableScheme": [
-        "git",
+        ".git/*",
         "bin/*"
     ],
-    "Lua.type.weakUnionCheck": true
+    "Lua.type.weakUnionCheck": true,
+    "Lua.workspace.ignoreSubmodules": false
 }
