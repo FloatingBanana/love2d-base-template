@@ -265,10 +265,6 @@ function Game:debugGui()
                     if Imgui.TreeNode_Str("Deferred renderer") then
                         Imgui.SeparatorText("G-buffer")
                         local imgSize = Imgui.ImVec2_Float(128, 128)
-
-                        Imgui.Image(renderer.gbuffer.position, imgSize)
-                        Imgui.SetItemTooltip("Position")
-                        Imgui.SameLine()
                         
                         Imgui.Image(renderer.gbuffer.normal, imgSize)
                         Imgui.SetItemTooltip("Normal")
