@@ -31,6 +31,7 @@ local ColorCorrection  = require "engine.postProcessing.colorCorrection"
 local FogClass         = require "engine.postProcessing.fog"
 local FXAAClass        = require "engine.postProcessing.fxaa"
 local MotionBlurClass  = require "engine.postProcessing.motionBlur"
+local PhysBloomClass   = require "engine.postProcessing.physicalBloom"
 
 local Color = require "libs.color"
 local Imgui = require "libs.cimgui"
@@ -41,7 +42,7 @@ local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
 
 local lockControls = true
-local useDeferredRendering = true
+local useDeferredRendering = false
 local hdrExposure = 1
 local contrast = 1
 local brightness = 0
@@ -51,7 +52,8 @@ local saturation = 1
 
 -- Post processing effects
 local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
-local bloom = BloomClass(SCREENSIZE, 6, 1)
+-- local bloom = BloomClass(SCREENSIZE, 6, 1)
+local bloom = PhysBloomClass(SCREENSIZE)
 local hdr = HDRClass(SCREENSIZE, hdrExposure)
 local colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
 -- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
@@ -196,6 +198,7 @@ local names = {
     [SkyboxClass]      = "Skybox",
     [SSAOClass]        = "SSAO",
     [BloomClass]       = "Bloom",
+    [PhysBloomClass]   = "Physical Bloom",
     [HDRClass]         = "HDR",
     [ColorCorrection]  = "Color correction",
     [FogClass]         = "Fog",
@@ -419,6 +422,23 @@ function Game:debugGui()
                             floatPtr[0] = effect.luminanceTreshold
                             if Imgui.SliderFloat("Luminance treshold", floatPtr, 0, 2) then
                                 effect:setLuminanceTreshold(floatPtr[0])
+                            end
+                        end
+
+                        if effect:is(PhysBloomClass) then ---@cast effect PhysicalBloom
+                            floatPtr[0] = effect.bloomAmount
+                            if Imgui.SliderFloat("Bloom amount", floatPtr, 0, 1) then
+                                effect.bloomAmount = floatPtr[0]
+                            end
+
+                            floatPtr[0] = effect.filterRadius
+                            if Imgui.SliderFloat("Filter radius", floatPtr, 0, 0.1) then
+                                effect.filterRadius = floatPtr[0]
+                            end
+
+                            intPtr[0] = #effect.mipmaps
+                            if Imgui.SliderInt("Mipmap count", intPtr, 1, 9) then
+                                effect.mipmaps = effect:generateMipmaps(SCREENSIZE, intPtr[0])
                             end
                         end
 
