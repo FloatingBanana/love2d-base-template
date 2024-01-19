@@ -3,7 +3,6 @@ local Game = {}
 local ffi              = require "ffi"
 local Matrix           = require "engine.math.matrix"
 local Vector3          = require "engine.math.vector3"
-local Vector4          = require "engine.math.vector4"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.misc.inputHelper"
 local Model            = require "engine.3D.model.model"
@@ -40,6 +39,7 @@ local Imgui = require "libs.cimgui"
 local renderer = nil ---@type BaseRenderer
 local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
+local drawer = 0
 
 local lockControls = true
 local useDeferredRendering = false
@@ -114,33 +114,46 @@ function Game:enter(from, ...)
     for name, mesh in pairs(myModel.meshes) do
         local isEmissive = (name == "light1" or name == "light2")
 
-        renderer:addMeshPart(mesh.parts, {
+        local id = renderer:addMesh({
+            mesh = mesh,
             castShadows = not isEmissive,
             ignoreLighting = isEmissive,
-            worldMatrix = mesh:getGlobalMatrix()
+            worldMatrix = mesh:getGlobalMatrix(),
+            animator = (name == "Person" and personAnimator or nil)
         })
-    end
 
-    for name, part in ipairs(myModel.meshes.Person.parts) do
-        renderer:getMeshpartSettings(part).animator = personAnimator
+        if name == "Drawer" then
+            drawer = id
+
+            -- renderer:addMesh({
+            --     mesh = mesh,
+            --     castShadows = true,
+            --     ignoreLighting = false,
+            --     worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateTranslation(Vector3(5, 0, 0)),
+            --     animator = nil
+            -- })
+        end
     end
 
     renderer:addLights(ambient, light, light2)
 end
 
 function Game:draw()
-    for i, part in ipairs(myModel.meshes.Drawer.parts) do
-        local settings = renderer:getMeshpartSettings(part)
-        settings.worldMatrix = myModel.meshes.Drawer:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(modelRot, 0, 0)
-    end
-
     renderer:render(playerCam)
 
-    local pos = Vector4(light2.position.x, light2.position.y, light2.position.z, 1) * playerCam.viewProjectionMatrix
-    local lpos = Vector3(pos.x, pos.y * -1, pos.z):divide(pos.w):multiply(0.5):add(0.5)
+    -- Drawer anima
+    local drawerConfig = renderer:getMeshConfig(drawer)
+    drawerConfig.worldMatrix = myModel.meshes.Drawer:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
 
-    if lpos.z > 0 and lpos.z < 1 then
-        love.graphics.circle("fill", lpos.x * WIDTH, lpos.y * HEIGHT, 400 * (1-lpos.z))
+
+    for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line invisible
+        local pos = light.position:clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1)
+
+        if pos.z > 0 and pos.z < 1 then
+            local z = 1 - pos.z
+            love.graphics.circle("fill", pos.x, pos.y, z*300)
+            love.graphics.rectangle("fill", pos.x-z*100, pos.y, z*200, z*450)
+        end
     end
 end
 
