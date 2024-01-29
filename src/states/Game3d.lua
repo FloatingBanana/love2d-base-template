@@ -43,19 +43,14 @@ local drawer = 0
 
 local lockControls = true
 local useDeferredRendering = false
-local hdrExposure = 1
-local contrast = 1
-local brightness = 0
-local exposure = 1
-local saturation = 1
 
 
 -- Post processing effects
 local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
 -- local bloom = BloomClass(SCREENSIZE, 6, 1)
 local bloom = PhysBloomClass(SCREENSIZE)
-local hdr = HDRClass(SCREENSIZE, hdrExposure)
-local colorCorr = ColorCorrection(SCREENSIZE, contrast, brightness, exposure, saturation, Color(1,1,1))
+local hdr = HDRClass(SCREENSIZE, 1)
+local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
 -- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
 local fxaa = FXAAClass(SCREENSIZE)
 local motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
