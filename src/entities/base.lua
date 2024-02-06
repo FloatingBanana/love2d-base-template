@@ -1,5 +1,5 @@
 local Object = require "engine.3rdparty.classic.classic"
-local Base   = Object:extend()
+local Base   = Object:extend("Base")
 
 function Base:new(position, layer)
     self.position = position
