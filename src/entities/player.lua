@@ -1,7 +1,7 @@
 local Vector2 = require "engine.math.vector2"
 local InputHelper = require "engine.misc.inputHelper"
 local Body = require "entities.body"
-local Player = Body:extend()
+local Player = Body:extend("Player")
 
 function Player:new(world, position)
     Body.new(self, world, position, Vector2(32, 32), 1)
