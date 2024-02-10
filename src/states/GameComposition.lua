@@ -6,7 +6,7 @@ local Manager = require "engine.composition.compositionManager"
 local Entity = require "engine.composition.entity"
 
 local Transform2d = require "composition.components.transform2dComponent"
-local shapeDraw = require "composition.components.shapeDrawComponent"
+local ShapeDraw = require "composition.components.shapeDrawComponent"
 local Body = require "composition.components.bodyComponent"
 local PlayerController = require "composition.components.playerControllerComponent"
 
@@ -18,18 +18,18 @@ function Game:enter()
     
     local player = Entity()
     player:attachComponents(Transform2d(Vector2(100, 100), Vector2(32, 32)))
-    player:attachComponents(shapeDraw("rectangle", false, {1,1,1}, 2))
+    player:attachComponents(ShapeDraw("rectangle", false, {1,1,1}, 2))
     player:attachComponents(PlayerController(200))
     player:attachComponents(Body(world, 3))
 
     local box = Entity()
     box:attachComponents(Transform2d(Vector2(200, 100), Vector2(32, 32)))
-    box:attachComponents(shapeDraw("rectangle", false, {1,1,0}, 2))
-    box:attachComponents(Body(world, 5))
+    box:attachComponents(ShapeDraw("rectangle", false, {1,1,0}, 2))
+    box:attachComponents(Body(world, 1))
 
     local wall = Entity()
     wall:attachComponents(Transform2d(Vector2(50, 200), Vector2(300, 32)))
-    wall:attachComponents(shapeDraw("rectangle", true, {1,0,1}, 1))
+    wall:attachComponents(ShapeDraw("rectangle", true, {1,0,1}, 1))
     wall:attachComponents(Body(world, 0))
 
     Manager.addEntity(player)

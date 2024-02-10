@@ -61,14 +61,15 @@ end
 
 
 function Body:onBodyCollision(entity, col, moveOffset)
+    local otherBody = col.other:getComponent("BodyComponent")
+
     if col.normal.x ~= 0 then
-        self.velocity.x = 0
+        self.velocity.x = otherBody.velocity.x
     end
     if col.normal.y ~= 0 then
-        self.velocity.y = 0
+        self.velocity.y = otherBody.velocity.y
     end
 
-    local otherBody = col.other:getComponent("BodyComponent")
     if otherBody.mass > 0 then
         local push = moveOffset * (1 - col.ti) * math.min(self.mass / otherBody.mass, 1) * Vector2(math.abs(col.normal.x), math.abs(col.normal.y))
         otherBody:move(push)
