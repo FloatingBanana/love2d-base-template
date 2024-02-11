@@ -15,7 +15,6 @@ local Component = require "engine.composition.component"
 ---@field public mass number
 ---@field public velocity Vector2
 ---@field public collisions BumpCollisionDescription[]
----@field private _entity Entity?
 ---
 ---@overload fun(world: table, mass: number): BodyComponent
 local Body = Component:extend("BodyComponent")
@@ -26,18 +25,13 @@ function Body:new(world, mass)
     self.mass = mass
     self.velocity = Vector2()
 
-    self._entity = nil
-
     self.collisions = {}
 end
 
 
-function Body:update(entity, dt)
-    local transform = entity:getComponent("Transform2dComponent")
-
+function Body:update(dt)
     if self.mass > 0 then
         self.velocity:add(Body.Gravity * (self.mass * dt))
-
         self:move(self.velocity * dt)
     else
         self.collisions = {}
@@ -46,21 +40,21 @@ end
 
 
 function Body:move(offset)
-    local transform = self._entity:getComponent("Transform2dComponent")
+    local transform = self.entity:getComponent("Transform2dComponent")
 
     local target = transform.position + offset
-    local goalx, goaly, cols, len = self.world:move(self._entity, target.x, target.y)
+    local goalx, goaly, cols, len = self.world:move(self.entity, target.x, target.y)
 
     transform.position = Vector2(goalx, goaly)
     self.collisions = cols
 
     for i=1, len do
-        self._entity:broadcastToComponents("onBodyCollision", cols[i], offset)
+        self.entity:broadcastToComponents("onBodyCollision", cols[i], offset)
     end
 end
 
 
-function Body:onBodyCollision(entity, col, moveOffset)
+function Body:onBodyCollision(col, moveOffset)
     local otherBody = col.other:getComponent("BodyComponent")
 
     if col.normal.x ~= 0 then
@@ -97,14 +91,12 @@ function Body:_addToWorld(entity)
 
     if not self.world:hasItem(entity) then
         self.world:add(entity, pos.x, pos.y, size.x, size.y)
-        self._entity = entity
     end
 end
 
 function Body:_removeFromWorld(entity)
     if self.world:hasItem(entity) then
         self.world:remove(entity)
-        self._entity = nil
     end
 end
 

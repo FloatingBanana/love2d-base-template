@@ -16,7 +16,7 @@ function Transform:new(position, size)
     self.rect = Rect(position, size)
 end
 
-function Transform:update(entity, dt)
+function Transform:update(dt)
     self.rect.position = self.position
     self.rect.size = self.size
 end

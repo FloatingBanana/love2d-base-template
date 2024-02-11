@@ -1,5 +1,4 @@
 local InputHelper = require "engine.misc.inputHelper"
-local Vector2 = require "engine.math.vector2"
 local Component = require "engine.composition.component"
 
 ---@class PlayerControllerComponent: Component
@@ -14,8 +13,8 @@ function PlayerController:new(speed)
     self.onGround = false
 end
 
-function PlayerController:update(entity, dt)
-    local body = entity:getComponent("BodyComponent")---@type BodyComponent
+function PlayerController:update(dt)
+    local body = self.entity:getComponent("BodyComponent") --[[@as BodyComponent]]
 
     self.onGround = false
     for i, col in ipairs(body.collisions) do
@@ -28,12 +27,12 @@ function PlayerController:update(entity, dt)
     body.velocity.x = InputHelper.getAxis("horizontal") * self.speed
 end
 
-function PlayerController:onBodyCollision(entity, col, moveOffset)
+function PlayerController:onBodyCollision(col, moveOffset)
     
 end
 
-function PlayerController:keypressed(entity, k)
-    local body = entity:getComponent("BodyComponent") ---@type BodyComponent
+function PlayerController:keypressed(k)
+    local body = self.entity:getComponent("BodyComponent") --[[@as BodyComponent]]
 
     if self.onGround and k == "space" then
         body.velocity.y = -500

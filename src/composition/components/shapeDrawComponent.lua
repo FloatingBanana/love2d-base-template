@@ -17,8 +17,8 @@ function ShapeDraw:new(type, fill, color, thickness)
     self.thickness = thickness or 1
 end
 
-function ShapeDraw:draw(entity)
-    local transform = entity:getComponent("Transform2dComponent")
+function ShapeDraw:draw()
+    local transform = self.entity:getComponent("Transform2dComponent") --[[@as Transform2dComponent]]
     local pos, size = transform.position, transform.size
 
     lg.setColor(self.color)
