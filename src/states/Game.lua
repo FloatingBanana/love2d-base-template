@@ -20,11 +20,11 @@ local finder = Astar()
 
 function Game:enter(from, ...)
     world = Bump.newWorld(32)
-    camera = Camera(Vector2(WIDTH, HEIGHT) / 2, 1)
+    camera = Camera(CENTERPOS, 1)
 
     EM.add(Body(world, Vector2(64, 192), Vector2(150, 32), 0))
 
-    grid = PathfinderGrid(Vector2(WIDTH, HEIGHT) / 32, function(x, y)
+    grid = PathfinderGrid(SCREENSIZE / 32, function(x, y)
         if #world:queryRect(x*32, y*32, 32, 32) > 0 then
             return "wall", 0
         end
