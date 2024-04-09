@@ -80,7 +80,7 @@ function Game:enter(from, ...)
         bloom,
         hdr,
         fxaa,
-        motionBlur,
+        -- motionBlur,
         colorCorr
     }
 
@@ -105,40 +105,34 @@ function Game:enter(from, ...)
     personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
     personAnimator:play()
 
-    -- Adding meshes to the scene
-    for name, mesh in pairs(myModel.meshes) do
-        local isEmissive = (name == "light1" or name == "light2")
-
-        local id = renderer:addMesh({
-            mesh = mesh,
-            castShadows = not isEmissive,
-            ignoreLighting = isEmissive,
-            worldMatrix = mesh:getGlobalMatrix(),
-            animator = (name == "Person" and personAnimator or nil)
-        })
-
-        if name == "Drawer" then
-            drawer = id
-
-            -- renderer:addMesh({
-            --     mesh = mesh,
-            --     castShadows = true,
-            --     ignoreLighting = false,
-            --     worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateTranslation(Vector3(5, 0, 0)),
-            --     animator = nil
-            -- })
-        end
-    end
-
     renderer:addLights(ambient, light, light2)
 end
 
 function Game:draw()
     renderer:render(playerCam)
 
-    -- Drawer anima
-    local drawerConfig = renderer:getMeshConfig(drawer)
-    drawerConfig.worldMatrix = myModel.meshes.Drawer:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+
+    for name, mesh in pairs(myModel.meshes) do
+        for i, part in ipairs(mesh.parts) do
+            local config = renderer:pushMeshPart(part)
+            config.material = part.material
+
+            if name == "Drawer" then
+                config.worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+            else
+                config.worldMatrix = mesh:getGlobalMatrix()
+            end
+
+            if name == "Person" then
+                config.animator = personAnimator
+            end
+
+            if name == "light1" or name == "light2" then
+                config.castShadows = false
+                config.ignoreLighting = true
+            end
+        end
+    end
 
 
     for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line invisible
