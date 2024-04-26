@@ -39,7 +39,6 @@ local Imgui = require "libs.cimgui"
 local renderer = nil ---@type BaseRenderer
 local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
-local drawer = 0
 
 local lockControls = true
 local useDeferredRendering = false
@@ -70,6 +69,7 @@ local modelRot = 0
 local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
 local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
+-- local light3 = DirectionalLight(Vector3(-1, 1, -1), Color(1,1,1), Color(1,1,1))
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
 
@@ -99,7 +99,9 @@ function Game:enter(from, ...)
 
     myModel = Model("assets/models/untitled.fbx", {
         materials = materials,
-        flags = {"triangulate", "sort by p type", "optimize meshes", "flip uvs", "calc tangent space"}
+        triangulate = true,
+        flipUVs = true,
+        calculateTangents = true
     })
 
     personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
@@ -109,16 +111,13 @@ function Game:enter(from, ...)
 end
 
 function Game:draw()
-    renderer:render(playerCam)
-
-
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
             local config = renderer:pushMeshPart(part)
             config.material = part.material
 
             if name == "Drawer" then
-                config.worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+                config.worldMatrix = mesh:getGlobalMatrix()-- * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
             else
                 config.worldMatrix = mesh:getGlobalMatrix()
             end
@@ -133,6 +132,8 @@ function Game:draw()
             end
         end
     end
+
+    renderer:render(playerCam)
 
 
     for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line invisible
