@@ -1,1 +1,5 @@
 _build
+
+bin/love-windows/*
+!bin/love-windows/assimp-vc143-mt.dll
+!bin/love-windows/cimgui.dll
