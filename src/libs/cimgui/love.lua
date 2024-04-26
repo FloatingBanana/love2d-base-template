@@ -270,7 +270,7 @@ function L.RenderDrawLists()
     end
 
     for i = 0, data.CmdListsCount - 1 do
-        local cmd_list = data.CmdLists[i]
+        local cmd_list = data.CmdLists.Data[i]
 
         local vertexcount = cmd_list.VtxBuffer.Size
         local data_size = vertexcount*ffi.sizeof("ImDrawVert")
@@ -280,7 +280,7 @@ function L.RenderDrawLists()
             if meshdata then meshdata:release() end
             meshdata = love.data.newByteData(math.max(data_size, ffi.sizeof("ImDrawVert")))
             ffi.copy(meshdata:getFFIPointer(), cmd_list.VtxBuffer.Data, data_size)
-            mesh = love.graphics.newMesh(vertexformat, meshdata, "triangles", "static")
+            mesh = love.graphics.newMesh(vertexformat, meshdata, "triangles", "stream")
         else
             ffi.copy(meshdata:getFFIPointer(), cmd_list.VtxBuffer.Data, data_size)
             mesh:setVertices(meshdata)
