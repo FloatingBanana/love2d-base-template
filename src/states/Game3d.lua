@@ -16,11 +16,9 @@ local DirectionalLight = require "engine.3D.lights.directionalLight"
 local AmbientLight     = require "engine.3D.lights.ambientLight"
 
 local DeferredRenderer = require "engine.3D.renderers.deferredRenderer"
-local DeferredMaterial = require "engine.3D.materials.deferredMaterial"
-
 local ForwardRenderer  = require "engine.3D.renderers.forwardRenderer"
-local ForwardMaterial  = require "engine.3D.materials.forwardMaterial"
-local EmissiveMaterial = require "engine.3D.materials.forwardEmissiveMaterial"
+
+local PhongMaterial    = require "engine.3D.materials.phongMaterial"
 
 local SkyboxClass      = require "engine.postProcessing.skybox"
 local SSAOClass        = require "engine.postProcessing.ssao"
@@ -45,14 +43,14 @@ local useDeferredRendering = false
 
 
 -- Post processing effects
-local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
 -- local bloom = BloomClass(SCREENSIZE, 6, 1)
+-- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
+-- local motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
+local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
 local bloom = PhysBloomClass(SCREENSIZE)
 local hdr = HDRClass(SCREENSIZE, 1)
 local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
--- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
 local fxaa = FXAAClass(SCREENSIZE)
-local motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
 local skybox = SkyboxClass({
     "assets/images/skybox/right.jpg",
     "assets/images/skybox/left.jpg",
@@ -85,20 +83,16 @@ function Game:enter(from, ...)
     }
 
 
-    local materials = {}
     if useDeferredRendering then
-        materials.default = DeferredMaterial
-
         renderer = DeferredRenderer(SCREENSIZE, pplist)
     else
-        materials.default = ForwardMaterial
-        materials.emissive = EmissiveMaterial
-
         renderer = ForwardRenderer(SCREENSIZE, pplist)
     end
 
     myModel = Model("assets/models/untitled.fbx", {
-        materials = materials,
+        materials = {
+            default = PhongMaterial
+        },
         triangulate = true,
         flipUVs = true,
         calculateTangents = true
@@ -117,7 +111,7 @@ function Game:draw()
             config.material = part.material
 
             if name == "Drawer" then
-                config.worldMatrix = mesh:getGlobalMatrix()-- * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+                config.worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
             else
                 config.worldMatrix = mesh:getGlobalMatrix()
             end
