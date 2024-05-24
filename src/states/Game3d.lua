@@ -95,7 +95,7 @@ function Game:enter(from, ...)
         },
         triangulate = true,
         flipUVs = true,
-        calculateTangents = true
+        removeUnusedMaterials = true
     })
 
     personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
