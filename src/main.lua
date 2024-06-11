@@ -9,6 +9,7 @@ local Imgui = require "libs.cimgui"
 local Utils = require "engine.misc.utils"
 local InputHelper = require "engine.misc.inputHelper"
 local TransitionManager = require "engine.transitions.transitionManager"
+local ContentPromise = require "engine.resourceHandling.contentPromise"
 
 local Game = require "states.Game3d"
 local Splash = require "states.Splash2"
@@ -114,5 +115,6 @@ function love.wheelmoved(x, y)
 end
 
 function love.quit()
+    ContentPromise.Quit()
     return Imgui.love.Shutdown()
 end
