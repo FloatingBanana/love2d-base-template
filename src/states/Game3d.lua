@@ -33,6 +33,7 @@ local PhysBloomClass   = require "engine.postProcessing.physicalBloom"
 local Color = require "libs.color"
 local Imgui = require "libs.cimgui"
 
+local graphicsStatsInfo = love.graphics.getStats()
 
 local renderer = nil ---@type BaseRenderer
 local myModel = nil ---@type Model
@@ -139,6 +140,8 @@ function Game:draw()
             love.graphics.rectangle("fill", pos.x-z*100, pos.y, z*200, z*450)
         end
     end
+
+    love.graphics.getStats(graphicsStatsInfo)
 end
 
 
@@ -244,8 +247,16 @@ function Game:debugGui()
         if Imgui.BeginTabBar("tabs", Imgui.ImGuiTabBarFlags_None) then
 
             if Imgui.BeginTabItem("General") then
-                Imgui.Text("Rendering mode: "..(useDeferredRendering and "Deferred" or "Forward"))
-                Imgui.Text(("Memory usage: %fmb"):format(collectgarbage("count") / 1024))
+                Imgui.Text("Rendering mode:      "..(useDeferredRendering and "Deferred" or "Forward"))
+                Imgui.Text(("Memory usage:       %fmb"):format(collectgarbage("count") / 1024 / 1024))
+                Imgui.Text(("Texture Memory:     %fmb"):format(graphicsStatsInfo.texturememory / 1024 / 1024))
+                Imgui.Text(("Draw calls:         %d"):format(graphicsStatsInfo.drawcalls))
+                Imgui.Text(("Batched draw calls: %d"):format(graphicsStatsInfo.drawcallsbatched))
+                Imgui.Text(("Shader switches:    %d"):format(graphicsStatsInfo.shaderswitches))
+                Imgui.Text(("Canvas switches:    %d"):format(graphicsStatsInfo.canvasswitches))
+                Imgui.Text(("Loaded images:      %d"):format(graphicsStatsInfo.images))
+                Imgui.Text(("Loaded canvas:      %d"):format(graphicsStatsInfo.canvases))
+                Imgui.Text(("Loaded fonts:       %d"):format(graphicsStatsInfo.fonts))
 
                 Imgui.SeparatorText("Camera")
 
