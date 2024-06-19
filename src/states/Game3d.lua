@@ -132,7 +132,7 @@ function Game:draw()
 
 
     for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line invisible
-        local pos = light.position:clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1)
+        local pos = (light.position or Vector3(0)):clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1)
 
         if pos.z > 0 and pos.z < 1 then
             local z = 1 - pos.z
@@ -376,7 +376,7 @@ function Game:debugGui()
                                 if light:is(PointLight) then
                                 else
                                     local size = Imgui.ImVec2_Float(128, 128)
-                                    Imgui.Image(light.shadowmap, size)
+                                    Imgui.Image(light.shadowMap, size)
                                 end
 
                                 Imgui.TreePop()
