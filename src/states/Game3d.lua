@@ -85,9 +85,9 @@ function Game:enter(from, ...)
 
 
     if useDeferredRendering then
-        renderer = DeferredRenderer(SCREENSIZE, pplist)
+        renderer = DeferredRenderer(SCREENSIZE, playerCam, pplist)
     else
-        renderer = ForwardRenderer(SCREENSIZE, pplist)
+        renderer = ForwardRenderer(SCREENSIZE, playerCam, pplist)
     end
 
     myModel = Model("assets/models/untitled.fbx", {
