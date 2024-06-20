@@ -1,5 +1,5 @@
 local Splash = {}
-lg = love.graphics
+local lg = love.graphics
 
 local heartImg = lg.newImage("assets/images/love_heart.png")
 local backImg = lg.newImage("assets/images/love_back.png")

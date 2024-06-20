@@ -28,8 +28,8 @@ function Game:update(dt)
 end
 
 function Game:draw()
-    lg.setCanvas(screen)
-    lg.clear(.2,.2,.2)
+    love.graphics.setCanvas(screen)
+    love.graphics.clear(.2,.2,.2)
 
     for i, sprite in ipairs(sprites) do
         local pos = Vector2(
@@ -40,12 +40,12 @@ function Game:draw()
         sprite:draw(pos)
     end
 
-    lg.setCanvas()
+    love.graphics.setCanvas()
 
     renderer:render(screen)
 
     -- lg.draw(light.shadowMap)
-    lg.draw(renderer.lightMap)
+    love.graphics.draw(renderer.lightMap)
 end
 
 function Game:mousepressed(x, y, button)
