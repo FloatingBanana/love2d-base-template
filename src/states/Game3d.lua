@@ -9,6 +9,7 @@ local Model            = require "engine.3D.model.model"
 local Camera           = require "engine.misc.camera3d"
 local Mesh             = require "engine.3D.model.modelMesh"
 local Meshpart         = require "engine.3D.model.meshpart"
+local CubemapUtils     = require "engine.misc.cubemapUtils"
 
 local PointLight       = require "engine.3D.lights.pointLight"
 local SpotLight        = require "engine.3D.lights.spotLight"
@@ -20,7 +21,6 @@ local ForwardRenderer  = require "engine.3D.renderers.forwardRenderer"
 
 local PhongMaterial    = require "engine.3D.materials.phongMaterial"
 
-local SkyboxClass      = require "engine.postProcessing.skybox"
 local SSAOClass        = require "engine.postProcessing.ssao"
 local BloomClass       = require "engine.postProcessing.bloom"
 local HDRClass         = require "engine.postProcessing.hdr"
@@ -52,15 +52,6 @@ local bloom = PhysBloomClass(SCREENSIZE)
 local hdr = HDRClass(SCREENSIZE, 1)
 local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
 local fxaa = FXAAClass(SCREENSIZE)
-local skybox = SkyboxClass({
-    "assets/images/skybox/right.jpg",
-    "assets/images/skybox/left.jpg",
-    "assets/images/skybox/top.jpg",
-    "assets/images/skybox/bottom.jpg",
-    "assets/images/skybox/front.jpg",
-    "assets/images/skybox/back.jpg"
-})
-
 
 local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
 local modelRot = 0
@@ -73,7 +64,6 @@ function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
 
     local pplist = {
-        skybox,
         ssao,
         -- fog,
         bloom,
@@ -103,6 +93,12 @@ function Game:enter(from, ...)
     personAnimator:play()
 
     renderer:addLights(ambient, light, light2)
+
+
+    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
+    local skyboxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture)
+
+    renderer.skyBoxTexture = skyboxTexture
 end
 
 function Game:draw()
@@ -195,7 +191,6 @@ end
 
 
 local names = {
-    [SkyboxClass]      = "Skybox",
     [SSAOClass]        = "SSAO",
     [BloomClass]       = "Bloom",
     [PhysBloomClass]   = "Physical Bloom",
