@@ -7,6 +7,7 @@ local InputHelper      = require "engine.misc.inputHelper"
 local Model            = require "engine.3D.model.model"
 local Camera           = require "engine.misc.camera3d"
 local CubemapUtils     = require "engine.misc.cubemapUtils"
+local Lume             = require "engine.3rdparty.lume"
 
 local PointLight       = require "engine.3D.lights.pointLight"
 local SpotLight        = require "engine.3D.lights.spotLight"
@@ -59,12 +60,18 @@ local modelRot = 0
 
 local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
-local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color(.2,.2,.2), Color.WHITE, Color.WHITE)
+local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color.WHITE, Color.WHITE)
 -- local light3 = DirectionalLight(Vector3(-1, 1, -1), Color(1,1,1), Color(1,1,1))
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
 
-    local pplist = {
+    if useDeferredRendering then
+        renderer = DeferredRenderer(SCREENSIZE, playerCam)
+    else
+        renderer = ForwardRenderer(SCREENSIZE, playerCam)
+    end
+
+    renderer:addPostProcessingEffects(
         ssao,
         -- fog,
         bloom,
@@ -72,14 +79,15 @@ function Game:enter(from, ...)
         fxaa,
         -- motionBlur,
         colorCorr
-    }
+    )
+
+    renderer:addLights(ambient, light, light2)
+
+    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
+    renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
 
 
-    if useDeferredRendering then
-        renderer = DeferredRenderer(SCREENSIZE, playerCam, pplist)
-    else
-        renderer = ForwardRenderer(SCREENSIZE, playerCam, pplist)
-    end
+
 
     myModel = Model("assets/models/untitled.fbx", {
         materials = {
@@ -92,14 +100,6 @@ function Game:enter(from, ...)
 
     personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
     personAnimator:play()
-
-    renderer:addLights(ambient, light, light2)
-
-
-    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
-    local skyboxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture)
-
-    renderer.skyBoxTexture = skyboxTexture
 end
 
 function Game:draw()
@@ -149,11 +149,12 @@ function Game:update(dt)
     personAnimator:update(dt)
 
     if lockControls then
-        local walkdir = Vector3(
-            -InputHelper.getAxis("horizontal"),
-            0,
-            -InputHelper.getAxis("vertical")
-        )
+        local walkdir = Vector3()
+        walkdir.x = -InputHelper.getAxis("horizontal")
+        walkdir.z = -InputHelper.getAxis("vertical")
+
+        local roll = (love.keyboard.isDown("e") and 30 or love.keyboard.isDown("q") and -30 or 0)
+        camRot.roll = Lume.lerp(camRot.roll, math.rad(roll), dt * 5)
 
         local camRotation = Quaternion.CreateFromYawPitchRoll(camRot.yaw, camRot.pitch, camRot.roll)
 
@@ -163,6 +164,7 @@ function Game:update(dt)
 
         playerCam.position.y = playerCam.position.y + (love.keyboard.isDown("space") and 1 or love.keyboard.isDown("lshift") and -1 or 0) * dt
         playerCam.rotation = camRotation
+
 
         if love.mouse.isDown(2) then
             light2.position = playerCam.position:clone()

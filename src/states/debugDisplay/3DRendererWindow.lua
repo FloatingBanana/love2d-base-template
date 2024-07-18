@@ -151,7 +151,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
             end
 
             if Imgui.BeginTabItem("Post processing") then
-                for i, effect in ipairs(renderer.ppeffects) do
+                for i, effect in ipairs(renderer.postProcessingEffects) do
                     if Imgui.TreeNode_Str(effect.ClassName) then
 
                         if effect.ClassName == "SSAO" then ---@cast effect SSAO
@@ -160,7 +160,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
 
                             if Imgui.Combo_Str_arr("Algorithm", intPtr, strArrayPtr, 3, 3) then
                                 effect = SSAOClass(SCREENSIZE, effect.kernelSize, effect.kernelRadius, ffi.string(strArrayPtr[intPtr[0]]))
-                                renderer.ppeffects[i] = effect
+                                renderer.postProcessingEffects[i] = effect
                             end
 
                             if Imgui.SliderInt("Kernel size", fillPointer(intPtr, effect.kernelSize), 1, 64) then
