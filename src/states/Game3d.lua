@@ -92,7 +92,7 @@ function Game:enter(from, ...)
     renderer.preFilteredEnvironment = CubemapUtils.getPreFilteredEnvironment(renderer.skyBoxTexture)
 
 
-    myModel = Model("assets/models/untitled.fbx", {
+    myModel = Model("assets/models/untitled.gltf", {
         materials = {
             default = PBRMaterial
         },
