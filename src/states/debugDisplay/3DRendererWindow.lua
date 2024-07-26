@@ -58,13 +58,11 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
                         Imgui.SeparatorText("G-buffer")
                         local imgSize = Imgui.ImVec2_Float(128, 128)
 
-                        Imgui.Image(renderer.gbuffer.normal, imgSize)
-                        Imgui.SetItemTooltip("Normal")
-                        Imgui.SameLine()
-
-                        Imgui.Image(renderer.gbuffer.albedoSpec, imgSize)
-                        Imgui.SetItemTooltip("Albedo + specular")
-                        Imgui.SameLine()
+                        for i, bufferPart in ipairs(renderer.gbuffer) do
+                            Imgui.Image(bufferPart.buffer, imgSize)
+                            Imgui.SetItemTooltip(bufferPart.uniform)
+                            Imgui.SameLine()
+                        end
 
                         Imgui.TreePop()
                     end
@@ -155,14 +153,6 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
                     if Imgui.TreeNode_Str(effect.ClassName) then
 
                         if effect.ClassName == "SSAO" then ---@cast effect SSAO
-                            intPtr[0] = effect.algorithm == "naive" and 0 or effect.algorithm == "accurate" and 1 or 2
-                            fillPointer(strArrayPtr, "naive", "accurate", "deferred")
-
-                            if Imgui.Combo_Str_arr("Algorithm", intPtr, strArrayPtr, 3, 3) then
-                                effect = SSAOClass(SCREENSIZE, effect.kernelSize, effect.kernelRadius, ffi.string(strArrayPtr[intPtr[0]]))
-                                renderer.postProcessingEffects[i] = effect
-                            end
-
                             if Imgui.SliderInt("Kernel size", fillPointer(intPtr, effect.kernelSize), 1, 64) then
                                 effect:setKernelSize(intPtr[0])
                             end
@@ -170,6 +160,10 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
                             if Imgui.SliderFloat("Kernel radius", fillPointer(floatPtr, effect.kernelRadius), 0, 2) then
                                 effect:setKernelRadius(floatPtr[0])
                             end
+
+                            Imgui.Image(effect.ssaoCanvas, Imgui.ImVec2_Float(128, 128))
+
+                            Imgui.TreePop()
                         end
 
                         if effect.ClassName == "HDR" then ---@cast effect HDR

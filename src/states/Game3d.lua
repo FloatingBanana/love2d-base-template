@@ -18,6 +18,7 @@ local DeferredRenderer = require "engine.3D.renderers.deferredRenderer"
 local ForwardRenderer  = require "engine.3D.renderers.forwardRenderer"
 
 local PhongMaterial    = require "engine.3D.materials.phongMaterial"
+local PBRMaterial      = require "engine.3D.materials.PBRMaterial"
 
 local SSAOClass        = require "engine.postProcessing.ssao"
 local BloomClass       = require "engine.postProcessing.bloom"
@@ -49,9 +50,9 @@ local useDeferredRendering = false
 -- local bloom = BloomClass(SCREENSIZE, 6, 1)
 -- local fog = FogClass(SCREENSIZE, 5, 100, Color(.4,.4,.4))
 -- local motionBlur = MotionBlurClass(SCREENSIZE, 0.35)
-local ssao = SSAOClass(SCREENSIZE, 32, 0.5, useDeferredRendering and "deferred" or "accurate")
+local ssao = SSAOClass(SCREENSIZE, 32, 0.5)
 local bloom = PhysBloomClass(SCREENSIZE)
-local hdr = HDRClass(SCREENSIZE, 1)
+local hdr = HDRClass(SCREENSIZE, 3)
 local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
 local fxaa = FXAAClass(SCREENSIZE)
 
@@ -66,7 +67,8 @@ function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
 
     if useDeferredRendering then
-        renderer = DeferredRenderer(SCREENSIZE, playerCam)
+        local gbuffer, shader = PBRMaterial.GenerateGBuffer(SCREENSIZE)
+        renderer = DeferredRenderer(SCREENSIZE, playerCam, gbuffer, shader)
     else
         renderer = ForwardRenderer(SCREENSIZE, playerCam)
     end
@@ -86,19 +88,20 @@ function Game:enter(from, ...)
     local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
     renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
 
-
+    renderer.irradianceMap = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
+    renderer.preFilteredEnvironment = CubemapUtils.getPreFilteredEnvironment(renderer.skyBoxTexture)
 
 
     myModel = Model("assets/models/untitled.fbx", {
         materials = {
-            default = PhongMaterial
+            default = PBRMaterial
         },
         triangulate = true,
         flipUVs = true,
         removeUnusedMaterials = true
     })
 
-    personAnimator = myModel.animations["Armature|Action"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
+    personAnimator = myModel.animations["running"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
     personAnimator:play()
 end
 
@@ -109,7 +112,7 @@ function Game:draw()
             config.material = part.material
 
             if name == "Drawer" then
-                config.worldMatrix = mesh:getGlobalMatrix() * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+                config.worldMatrix = mesh:getGlobalMatrix()-- * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
             else
                 config.worldMatrix = mesh:getGlobalMatrix()
             end
