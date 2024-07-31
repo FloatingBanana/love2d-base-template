@@ -162,8 +162,6 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
                             end
 
                             Imgui.Image(effect.ssaoCanvas, Imgui.ImVec2_Float(128, 128))
-
-                            Imgui.TreePop()
                         end
 
                         if effect.ClassName == "HDR" then ---@cast effect HDR

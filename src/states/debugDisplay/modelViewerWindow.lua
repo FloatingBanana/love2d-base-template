@@ -47,6 +47,21 @@ local function render(isWindowOpen, model)
                 Imgui.EndTabItem()
             end
 
+
+            if Imgui.BeginTabItem("Armatures") then
+                for armatureName, armature in pairs(model.armatures) do
+                    if Imgui.TreeNode_Str(armatureName) then
+                        for boneName, bone in pairs(armature.rootBones) do
+                            renderTree(bone)
+                        end
+
+                        Imgui.TreePop()
+                    end
+                end
+
+                Imgui.EndTabItem()
+            end
+
             if Imgui.BeginTabItem("Materials") then
                 for name, mat in pairs(model.materials) do
                     if Imgui.TreeNode_Str(("%s (%s)"):format(name, mat.ClassName)) then

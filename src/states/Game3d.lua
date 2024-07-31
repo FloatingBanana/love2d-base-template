@@ -60,7 +60,7 @@ local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60),
 local modelRot = 0
 
 local ambient = AmbientLight(Color(.2,.2,.2))
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color.WHITE, Color.WHITE)
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(20,20,20), Color(20,20,20))
 local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color.WHITE, Color.WHITE)
 -- local light3 = DirectionalLight(Vector3(-1, 1, -1), Color(1,1,1), Color(1,1,1))
 function Game:enter(from, ...)
@@ -101,7 +101,7 @@ function Game:enter(from, ...)
         removeUnusedMaterials = true
     })
 
-    personAnimator = myModel.animations["running"]:getNewAnimator(myModel.nodes.Armature, myModel.nodes.Person:getGlobalMatrix())
+    personAnimator = myModel.animations["running"]:getNewAnimator(myModel.armatures.Armature, myModel.nodes.Person:getGlobalMatrix())
     personAnimator:play()
 end
 
