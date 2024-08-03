@@ -73,7 +73,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
 
             if Imgui.BeginTabItem("Lights") then
                 for i, light in ipairs(renderer.lights) do
-                    if Imgui.TreeNode_Str(light.ClassName) then
+                    if Imgui.TreeNode_Str(light.ClassName.."##"..i) then
 
                         if Imgui.Checkbox("Enabled", fillPointer(boolPtr, light.enabled)) then
                             light.enabled = boolPtr[0]

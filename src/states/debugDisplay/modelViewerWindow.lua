@@ -83,20 +83,21 @@ local function render(isWindowOpen, model)
 
                                 Imgui.TableSetColumnIndex(2)
                                 local attrType = Utils.getType(attr.value)
+                                local labelID = "##"..attrName
 
-                                if attrType == "number" and Imgui.InputFloat("", fillPointer(floatPtr, attr.value)) then
+                                if attrType == "number" and Imgui.InputFloat(labelID, fillPointer(floatPtr, attr.value)) then
                                     attr.value = floatPtr[0]
                                 end
 
-                                if attrType == "boolean" and Imgui.Checkbox("", fillPointer(boolPtr, attr.value)) then
+                                if attrType == "boolean" and Imgui.Checkbox(labelID, fillPointer(boolPtr, attr.value)) then
                                     attr.value = boolPtr[0]
                                 end
 
-                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 3 and Imgui.ColorEdit3("", fillPointer(floatPtr, attr.value)) then
+                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 3 and Imgui.ColorEdit3(labelID, fillPointer(floatPtr, attr.value)) then
                                     attr.value = {floatPtr[0], floatPtr[1], floatPtr[2]}
                                 end
 
-                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 4 and Imgui.ColorEdit4("", fillPointer(floatPtr, attr.value)) then
+                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 4 and Imgui.ColorEdit4(labelID, fillPointer(floatPtr, attr.value)) then
                                     attr.value = {floatPtr[0], floatPtr[1], floatPtr[2], floatPtr[3]}
                                 end
 
