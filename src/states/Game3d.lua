@@ -60,9 +60,9 @@ local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60),
 local modelRot = 0
 
 local ambient = AmbientLight(Color(.2,.2,.2))
-local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(20,20,20), Color(20,20,20)):setShadowMapping(1024, false)
-local light2 = PointLight(Vector3(0), 1, 0.005, 0.04, Color.WHITE, Color.WHITE):setShadowMapping(512, false)
--- local light3 = DirectionalLight(Vector3(-1, 1, -1), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
+local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(50,50,50), Color(50,50,50)):setShadowMapping(1024, false)
+local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50)):setShadowMapping(512, false)
+-- local light3 = DirectionalLight(Vector3(-1, 1,-1), -Vector3(1,-1, 1):normalize(), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
 
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
