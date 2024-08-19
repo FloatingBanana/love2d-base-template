@@ -87,10 +87,14 @@ function Game:enter(from, ...)
     renderer:addLights(ambient, light, light2)
 
     local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
+    local irradianceTexture = love.graphics.newImage("assets/images/environment_irradiance.dds")
+    local radianceTexture = love.graphics.newImage("assets/images/environment_radiance.dds")
     renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
+    renderer.environmentRadianceMap = CubemapUtils.equirectangularMapToCubeMap(radianceTexture, "rg11b10f")
+    renderer.irradianceMap = CubemapUtils.equirectangularMapToCubeMap(irradianceTexture, "rg11b10f")
 
-    renderer.irradianceMap = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
-    renderer.preFilteredEnvironment = CubemapUtils.getPreFilteredEnvironment(renderer.skyBoxTexture)
+    -- renderer.irradianceMap = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
+    -- renderer.environmentRadianceMap = CubemapUtils.getEnvironmentRadianceMap(renderer.skyBoxTexture)
 
 
     myModel = Model("assets/models/untitled.gltf", {
