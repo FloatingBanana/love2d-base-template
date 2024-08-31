@@ -191,7 +191,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
 
                             local maxMips = math.log(math.max(effect.blurCanvas:getDimensions()), 2)
                             if Imgui.SliderInt("Mipmap count", fillPointer(intPtr, #effect.mipmaps), 1, maxMips) then
-                                effect.mipmaps = effect:generateMipmaps(SCREENSIZE, intPtr[0])
+                                effect.mipmaps = effect:generateMipmaps(intPtr[0])
                             end
                         end
 

@@ -36,12 +36,23 @@ local debugWindows = {
     modelInfo    = {isOpen = true, draw = require "states.debugDisplay.modelViewerWindow"}
 }
 
+
+local cubeShader = love.graphics.newShader [[
+uniform mat4 u_viewProj;
+
+vec4 position(mat4 transformProjection, vec4 position) {
+    return u_viewProj * position;
+}
+]]
+
+
 local graphicsStatsInfo = love.graphics.getStats()
 
 local renderer = nil ---@type BaseRenderer
 local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
 
+local showAABB = false
 local lockControls = true
 local useDeferredRendering = false
 
@@ -57,7 +68,6 @@ local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
 local fxaa = FXAAClass(SCREENSIZE)
 
 local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
-local modelRot = 0
 
 local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(50,50,50), Color(50,50,50)):setShadowMapping(1024, false)
@@ -111,6 +121,8 @@ function Game:enter(from, ...)
 end
 
 function Game:draw()
+    love.graphics.draw(renderer:render())
+
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
             local config = renderer:pushMeshPart(part)
@@ -133,11 +145,12 @@ function Game:draw()
         end
     end
 
-    love.graphics.draw(renderer:render())
+    love.graphics.setBlendMode("alpha", "alphamultiply")
+    love.graphics.getStats(graphicsStatsInfo)
 
 
-    for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line invisible
-        local pos = (light.position or Vector3(0)):clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1)
+    for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line: invisible
+        local pos = (light.position or Vector3(0)):clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1) ---@diagnostic disable-line: undefined-field
 
         if pos.z > 0 and pos.z < 1 then
             local z = 1 - pos.z
@@ -146,7 +159,21 @@ function Game:draw()
         end
     end
 
-    love.graphics.getStats(graphicsStatsInfo)
+    if showAABB then
+        love.graphics.push("all")
+        love.graphics.setWireframe(true)
+        love.graphics.setMeshCullMode("front")
+        love.graphics.setShader(cubeShader)
+
+        for c, config in ipairs(renderer.meshParts) do
+            local min, max = config.meshPart.aabb:getMinMaxTransformed(config.worldMatrix)
+            local worldMatrix = Matrix.CreateScale((max - min) / 2) * Matrix.CreateTranslation((min + max) * 0.5)
+
+            cubeShader:send("u_viewProj", "column", (worldMatrix * playerCam.viewProjectionMatrix):toFlatTable())
+            love.graphics.draw(CubemapUtils.cubeMesh)
+        end
+        love.graphics.pop()
+    end
 end
 
 
@@ -197,6 +224,10 @@ function Game:keypressed(key)
     if key == "f1" then
         lockControls = not lockControls
         love.mouse.setRelativeMode(lockControls)
+    end
+
+    if key == "f2" then
+        showAABB = not showAABB
     end
 end
 
