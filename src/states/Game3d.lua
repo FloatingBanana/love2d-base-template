@@ -19,6 +19,7 @@ local ForwardRenderer  = require "engine.3D.renderers.forwardRenderer"
 
 local PhongMaterial    = require "engine.3D.materials.phongMaterial"
 local PBRMaterial      = require "engine.3D.materials.PBRMaterial"
+local ToonMaterial     = require "engine.3D.materials.toonMaterial"
 
 local SSAOClass        = require "engine.postProcessing.ssao"
 local BloomClass       = require "engine.postProcessing.bloom"
@@ -28,6 +29,7 @@ local FogClass         = require "engine.postProcessing.fog"
 local FXAAClass        = require "engine.postProcessing.fxaa"
 local MotionBlurClass  = require "engine.postProcessing.motionBlur"
 local PhysBloomClass   = require "engine.postProcessing.physicalBloom"
+local SobelOutline     = require "engine.postProcessing.sobelOutline"
 
 local Color = require "libs.color"
 
@@ -66,8 +68,9 @@ local bloom = PhysBloomClass(SCREENSIZE)
 local hdr = HDRClass(SCREENSIZE, 3)
 local colorCorr = ColorCorrection(SCREENSIZE, 1, 0, 1, 1, Color(1,1,1))
 local fxaa = FXAAClass(SCREENSIZE)
+local sobelOutline = SobelOutline(SCREENSIZE, 2, {0,0,0,.5})
 
-local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), WIDTH/HEIGHT, 0.1, 1000)
+local playerCam = Camera(Vector3(0, 1, -2), Quaternion.Identity(), math.rad(60), SCREENSIZE, 0.1, 1000)
 
 local ambient = AmbientLight(Color(.2,.2,.2))
 local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5), Color(50,50,50), Color(50,50,50)):setShadowMapping(1024, false)
@@ -78,8 +81,7 @@ function Game:enter(from, ...)
     love.mouse.setRelativeMode(lockControls)
 
     if useDeferredRendering then
-        local gbuffer, shader = PBRMaterial.GenerateGBuffer(SCREENSIZE)
-        renderer = DeferredRenderer(SCREENSIZE, playerCam, gbuffer, shader)
+        renderer = DeferredRenderer(SCREENSIZE, playerCam, PBRMaterial())
     else
         renderer = ForwardRenderer(SCREENSIZE, playerCam)
     end
@@ -109,7 +111,7 @@ function Game:enter(from, ...)
 
     myModel = Model("assets/models/untitled.gltf", {
         materials = {
-            default = PBRMaterial
+            default = PBRMaterial()
         },
         triangulate = true,
         flipUVs = true,
@@ -150,7 +152,7 @@ function Game:draw()
 
 
     for i, light in ipairs(renderer.lights) do ---@diagnostic disable-line: invisible
-        local pos = (light.position or Vector3(0)):clone():worldToScreen(playerCam.viewProjectionMatrix, SCREENSIZE, 0, 1) ---@diagnostic disable-line: undefined-field
+        local pos = (light.position or Vector3(0)):clone():worldToScreen(playerCam.viewPerspectiveMatrix, SCREENSIZE, 0, 1) ---@diagnostic disable-line: undefined-field
 
         if pos.z > 0 and pos.z < 1 then
             local z = 1 - pos.z
@@ -169,7 +171,7 @@ function Game:draw()
             local min, max = config.meshPart.aabb:getMinMaxTransformed(config.worldMatrix)
             local worldMatrix = Matrix.CreateScale((max - min) / 2) * Matrix.CreateTranslation((min + max) * 0.5)
 
-            cubeShader:send("u_viewProj", "column", (worldMatrix * playerCam.viewProjectionMatrix):toFlatTable())
+            cubeShader:send("u_viewProj", "column", (worldMatrix * playerCam.viewPerspectiveMatrix):toFlatTable())
             love.graphics.draw(CubemapUtils.cubeMesh)
         end
         love.graphics.pop()
@@ -179,8 +181,6 @@ end
 
 local camRot = Vector3()
 function Game:update(dt)
-    modelRot = modelRot + dt
-
     personAnimator:update(dt)
 
     if lockControls then

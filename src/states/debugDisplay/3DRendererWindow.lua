@@ -233,6 +233,16 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
                             end
                         end
 
+                        if effect.ClassName == "SobelOutline" then ---@cast effect SobelOutline
+                            if Imgui.SliderFloat("Thickness", fillPointer(floatPtr, effect.thickness), 0, 10) then
+                                effect.thickness = floatPtr[0]
+                            end
+
+                            if Imgui.ColorEdit4("Outline color", fillPointer(floatPtr, unpack(effect.color))) then
+                                effect.color = {floatPtr[0], floatPtr[1], floatPtr[2], floatPtr[3]}
+                            end
+                        end
+
                         Imgui.TreePop()
                     end
                 end
