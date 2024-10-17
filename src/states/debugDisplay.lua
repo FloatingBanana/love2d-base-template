@@ -1,15 +1,27 @@
----@diagnostic disable: invisible
+local DebugDisplay = {}
 
 local DeferredRenderer = require "engine.3D.renderers.deferredRenderer"
 local SSAOClass = require "engine.postProcessing.ssao"
 local Vector3 = require "engine.math.vector3"
+local Utils = require "engine.misc.utils"
+local GS = require "libs.gamestate"
 local Imgui = require "libs.cimgui"
 local ffi = require "ffi"
+
 
 local boolPtr = ffi.new("bool[10]")
 local intPtr = ffi.new("int[10]")
 local floatPtr = ffi.new("float[10]")
 local strArrayPtr = ffi.new("const char*[3]")
+
+local isRendererWindowOpen = true
+local isModelWindowOpen = true
+local prevState = {}
+local debugData = {
+    renderer = nil, ---@type BaseRenderer
+    model = nil, ---@type Model
+    graphicsStatsInfo = nil, ---@type table
+}
 
 local function fillPointer(pointer, ...)
     for i=1, select("#",...) do
@@ -19,48 +31,66 @@ local function fillPointer(pointer, ...)
 end
 
 
----@param isWindowOpen boolean
----@param renderer BaseRenderer
----@param graphicsStatsInfo table
----@return boolean
-local function render(isWindowOpen, renderer, graphicsStatsInfo)
-    if isWindowOpen and Imgui.Begin("3D Renderer", fillPointer(boolPtr, isWindowOpen), Imgui.ImGuiWindowFlags_None) then
-        isWindowOpen = boolPtr[0]
+--- @param node ModelNode
+local function renderTree(node)
+    local flag = #node.children == 0 and Imgui.ImGuiTreeNodeFlags_Leaf or Imgui.ImGuiTreeNodeFlags_None
+
+    if Imgui.TreeNodeEx_Str(("%s (%s)"):format(node.name, node.ClassName), flag) then
+        for i, child in ipairs(node.children) do
+            renderTree(child)
+        end
+        Imgui.TreePop()
+    end
+end
+
+
+function DebugDisplay:enter(from, data)
+    prevState = from
+    debugData = data
+    love.mouse.setRelativeMode(false)
+end
+
+function DebugDisplay:update(dt)
+    prevState:update(dt)
+
+    ---@diagnostic disable: invisible
+
+    if isRendererWindowOpen and Imgui.Begin("3D Renderer", fillPointer(boolPtr, isRendererWindowOpen), Imgui.ImGuiWindowFlags_None) then
+        isRendererWindowOpen = boolPtr[0]
 
         if Imgui.BeginTabBar("rendererTabBar", Imgui.ImGuiTabBarFlags_None) then
 
             if Imgui.BeginTabItem("General") then
-                Imgui.Text("Rendering mode:      "..(renderer:is(DeferredRenderer) and "Deferred" or "Forward"))
+                Imgui.Text("Rendering mode:      "..(debugData.renderer:is(DeferredRenderer) and "Deferred" or "Forward"))
                 Imgui.Text(("Memory usage:       %fmb"):format(collectgarbage("count") / 1024 / 1024))
-                Imgui.Text(("Texture Memory:     %fmb"):format(graphicsStatsInfo.texturememory / 1024 / 1024))
-                Imgui.Text(("Draw calls:         %d"):format(graphicsStatsInfo.drawcalls))
-                Imgui.Text(("Batched draw calls: %d"):format(graphicsStatsInfo.drawcallsbatched))
-                Imgui.Text(("Shader switches:    %d"):format(graphicsStatsInfo.shaderswitches))
-                Imgui.Text(("Canvas switches:    %d"):format(graphicsStatsInfo.canvasswitches))
-                Imgui.Text(("Loaded images:      %d"):format(graphicsStatsInfo.images))
-                Imgui.Text(("Loaded canvas:      %d"):format(graphicsStatsInfo.canvases))
-                Imgui.Text(("Loaded fonts:       %d"):format(graphicsStatsInfo.fonts))
+                Imgui.Text(("Texture Memory:     %fmb"):format(debugData.graphicsStatsInfo.texturememory / 1024 / 1024))
+                Imgui.Text(("Draw calls:         %d"):format(debugData.graphicsStatsInfo.drawcalls))
+                Imgui.Text(("Batched draw calls: %d"):format(debugData.graphicsStatsInfo.drawcallsbatched))
+                Imgui.Text(("Shader switches:    %d"):format(debugData.graphicsStatsInfo.shaderswitches))
+                Imgui.Text(("Canvas switches:    %d"):format(debugData.graphicsStatsInfo.canvasswitches))
+                Imgui.Text(("Loaded images:      %d"):format(debugData.graphicsStatsInfo.images))
+                Imgui.Text(("Loaded canvas:      %d"):format(debugData.graphicsStatsInfo.canvases))
+                Imgui.Text(("Loaded fonts:       %d"):format(debugData.graphicsStatsInfo.fonts))
 
                 Imgui.SeparatorText("Camera")
 
-                if Imgui.InputFloat3("Position", fillPointer(floatPtr, renderer.camera.position:split())) then
-                    renderer.camera.position = Vector3(floatPtr[0], floatPtr[1], floatPtr[2])
+                if Imgui.InputFloat3("Position", fillPointer(floatPtr, debugData.renderer.camera.position:split())) then
+                    debugData.renderer.camera.position = Vector3(floatPtr[0], floatPtr[1], floatPtr[2])
                 end
 
-                if Imgui.SliderFloat("Field of view", fillPointer(floatPtr, math.deg(renderer.camera.fov)), 0, 180) then
-                    renderer.camera.fov = math.rad(floatPtr[0])
+                if Imgui.SliderFloat("Field of view", fillPointer(floatPtr, math.deg(debugData.renderer.camera.fov)), 0, 180) then
+                    debugData.renderer.camera.fov = math.rad(floatPtr[0])
                 end
 
                 Imgui.Separator()
 
-                if renderer:is(DeferredRenderer) then ---@cast renderer DeferredRenderer
+                if debugData.renderer:is(DeferredRenderer) then ---@cast renderer DeferredRenderer
                     if Imgui.TreeNode_Str("Deferred renderer") then
                         Imgui.SeparatorText("G-buffer")
                         local imgSize = Imgui.ImVec2_Float(128, 128)
 
-                        for i, bufferPart in ipairs(renderer.gbuffer) do
-                            Imgui.Image(bufferPart.buffer, imgSize)
-                            Imgui.SetItemTooltip(bufferPart.uniform)
+                        for i, buffer in ipairs(debugData.renderer.gbuffer) do
+                            Imgui.Image(buffer, imgSize)
                             Imgui.SameLine()
                         end
 
@@ -72,7 +102,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
             end
 
             if Imgui.BeginTabItem("Lights") then
-                for i, light in ipairs(renderer.lights) do
+                for i, light in ipairs(debugData.renderer.lights) do
                     if Imgui.TreeNode_Str(light.ClassName.."##"..i) then
 
                         if Imgui.Checkbox("Enabled", fillPointer(boolPtr, light.enabled)) then
@@ -149,7 +179,7 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
             end
 
             if Imgui.BeginTabItem("Post processing") then
-                for i, effect in ipairs(renderer.postProcessingEffects) do
+                for i, effect in ipairs(debugData.renderer.postProcessingEffects) do
                     if Imgui.TreeNode_Str(effect.ClassName) then
 
                         if effect.ClassName == "SSAO" then ---@cast effect SSAO
@@ -255,7 +285,123 @@ local function render(isWindowOpen, renderer, graphicsStatsInfo)
     end
     Imgui.End()
 
-    return isWindowOpen
+
+
+
+
+
+    if isModelWindowOpen and Imgui.Begin("Model Viewer", fillPointer(boolPtr, isModelWindowOpen), Imgui.ImGuiWindowFlags_None) then
+        isModelWindowOpen = boolPtr[0]
+
+        if Imgui.BeginTabBar("modelViewTabBar", Imgui.ImGuiTabBarFlags_None) then
+            if Imgui.BeginTabItem("Node Hierarchy") then
+                if Imgui.TreeNode_Str("Scene") then
+                    renderTree(debugData.model.rootNode)
+                    Imgui.TreePop()
+                end
+
+                Imgui.EndTabItem()
+            end
+
+
+            if Imgui.BeginTabItem("Armatures") then
+                for armatureName, armature in pairs(debugData.model.armatures) do
+                    if Imgui.TreeNode_Str(armatureName) then
+                        for boneName, bone in pairs(armature.rootBones) do
+                            renderTree(bone)
+                        end
+
+                        Imgui.TreePop()
+                    end
+                end
+
+                Imgui.EndTabItem()
+            end
+
+            if Imgui.BeginTabItem("Materials") then
+                for name, mat in pairs(debugData.model.materials) do
+                    if Imgui.TreeNode_Str(("%s (%s)"):format(name, mat.ClassName)) then
+
+                        if Imgui.BeginTable("MaterialAttributes", 3, Imgui.ImGuiTableFlags_BordersOuter) then
+                            Imgui.TableSetupColumn("Name")
+                            Imgui.TableSetupColumn("Uniform")
+                            Imgui.TableSetupColumn("Value")
+                            Imgui.TableHeadersRow()
+
+                            for attrName, attr in pairs(mat.__attrs) do
+                                Imgui.TableNextRow()
+
+                                Imgui.TableSetColumnIndex(0)
+                                Imgui.Text(attrName)
+
+                                Imgui.TableSetColumnIndex(1)
+                                Imgui.Text(attr.uniform)
+
+                                Imgui.TableSetColumnIndex(2)
+                                local attrType = Utils.getType(attr.value)
+                                local labelID = "##"..attrName
+
+                                if attrType == "number" and Imgui.InputFloat(labelID, fillPointer(floatPtr, attr.value)) then
+                                    attr.value = floatPtr[0]
+                                end
+
+                                if attrType == "boolean" and Imgui.Checkbox(labelID, fillPointer(boolPtr, attr.value)) then
+                                    attr.value = boolPtr[0]
+                                end
+
+                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 3 and Imgui.ColorEdit3(labelID, fillPointer(floatPtr, attr.value)) then
+                                    attr.value = {floatPtr[0], floatPtr[1], floatPtr[2]}
+                                end
+
+                                if attrType == "table" and type(attr.value[1]) == "number" and #attr.value == 4 and Imgui.ColorEdit4(labelID, fillPointer(floatPtr, attr.value)) then
+                                    attr.value = {floatPtr[0], floatPtr[1], floatPtr[2], floatPtr[3]}
+                                end
+
+                                if attrType == "Image" or attrName == "Canvas" then
+                                    Imgui.Text(tostring(attr.value))
+
+                                    if Imgui.BeginItemTooltip() then
+                                        local size = Imgui.ImVec2_Float(128, 128)
+                                        Imgui.Image(attr.value, size)
+
+                                        Imgui.EndTooltip()
+                                    end
+                                end
+
+                            end
+
+                            Imgui.EndTable()
+                        end
+                        Imgui.TreePop()
+                    end
+                end
+
+                Imgui.EndTabItem()
+            end
+
+            Imgui.EndTabBar()
+        end
+    end
+    Imgui.End()
+
+    ---@diagnostic enable: invisible
 end
 
-return render
+function DebugDisplay:draw()
+    prevState:draw()
+end
+
+
+function DebugDisplay:keypressed(key)
+    if key == "f4" then
+        isModelWindowOpen = true
+        isRendererWindowOpen = true
+    end
+
+    if key == "f1" then
+        GS.pop()
+        love.mouse.setRelativeMode(true)
+    end
+end
+
+return DebugDisplay

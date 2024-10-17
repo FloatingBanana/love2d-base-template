@@ -31,13 +31,9 @@ local MotionBlurClass  = require "engine.postProcessing.motionBlur"
 local PhysBloomClass   = require "engine.postProcessing.physicalBloom"
 local SobelOutline     = require "engine.postProcessing.sobelOutline"
 
+local GS = require "libs.gamestate"
 local Color = require "libs.color"
-
-local debugWindows = {
-    rendererInfo = {isOpen = true, draw = require "states.debugDisplay.3DRendererWindow"},
-    modelInfo    = {isOpen = true, draw = require "states.debugDisplay.modelViewerWindow"}
-}
-
+local DebugDisplayState = require "states.debugDisplay"
 
 local cubeShader = love.graphics.newShader [[
 uniform mat4 u_viewProj;
@@ -55,8 +51,7 @@ local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
 
 local showAABB = false
-local lockControls = true
-local useDeferredRendering = false
+local useDeferredRendering = true
 
 
 -- Post processing effects
@@ -78,7 +73,7 @@ local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50))
 -- local light3 = DirectionalLight(Vector3(-1, 1,-1), -Vector3(1,-1, 1):normalize(), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
 
 function Game:enter(from, ...)
-    love.mouse.setRelativeMode(lockControls)
+    love.mouse.setRelativeMode(true)
 
     if useDeferredRendering then
         renderer = DeferredRenderer(SCREENSIZE, playerCam, PBRMaterial())
@@ -92,6 +87,7 @@ function Game:enter(from, ...)
         bloom,
         hdr,
         fxaa,
+        -- sobelOutline,
         -- motionBlur,
         colorCorr
     )
@@ -183,7 +179,7 @@ local camRot = Vector3()
 function Game:update(dt)
     personAnimator:update(dt)
 
-    if lockControls then
+    if GS.current() == Game then
         local walkdir = Vector3()
         walkdir.x = -InputHelper.getAxis("horizontal")
         walkdir.z = -InputHelper.getAxis("vertical")
@@ -208,9 +204,6 @@ function Game:update(dt)
         if love.mouse.isDown(1) then
             light.position, light.direction = playerCam.position:clone(), Vector3(0,0,1):transform(camRotation)
         end
-    else
-        debugWindows.rendererInfo.isOpen = debugWindows.rendererInfo.draw(debugWindows.rendererInfo.isOpen, renderer, graphicsStatsInfo)
-        debugWindows.modelInfo.isOpen = debugWindows.modelInfo.draw(debugWindows.modelInfo.isOpen, myModel)
     end
 end
 
@@ -222,8 +215,7 @@ end
 
 function Game:keypressed(key)
     if key == "f1" then
-        lockControls = not lockControls
-        love.mouse.setRelativeMode(lockControls)
+        GS.push(DebugDisplayState, {renderer = renderer, model = myModel, graphicsStatsInfo = graphicsStatsInfo})
     end
 
     if key == "f2" then
