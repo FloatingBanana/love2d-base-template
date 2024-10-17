@@ -9,6 +9,7 @@
 	"New Class": {
 		"scope": "lua",
 		"prefix": "class",
+		"description": "Declares a new class",
 		"body": [
 			"local ${2:Object} = require \"${3:engine.3rdparty.classic.classic}\"",
 			"",
@@ -23,7 +24,17 @@
 			"end",
 			"",
 			"return $1"
-		],
-		"description": "Declares a new class"
+		]
+	},
+
+	"Pixel shader effect function": {
+		"scope": "glsl",
+		"prefix": "effect",
+		"description": "Declares a love2d shader effect function",
+		"body": [
+			"vec4 effect(vec4 color, sampler2D tex, vec2 texcoords, vec2 screencoords) {",
+			"\t$1",
+			"}"
+		]
 	}
 }
