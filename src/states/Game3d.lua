@@ -75,11 +75,23 @@ local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50))
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(true)
 
+    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
+    local irradianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_irradiance.dds"), "rg11b10f")
+    local radianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_radiance.dds"), "rg11b10f")
+
+    -- local irradianceTexture = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
+    -- local radianceTexture = CubemapUtils.getEnvironmentRadianceMap(renderer.skyBoxTexture)
+
+
+    local defaultMaterial = PBRMaterial(irradianceTexture, radianceTexture)
+
     if useDeferredRendering then
-        renderer = DeferredRenderer(SCREENSIZE, playerCam, PBRMaterial())
+        renderer = DeferredRenderer(SCREENSIZE, playerCam, defaultMaterial)
     else
         renderer = ForwardRenderer(SCREENSIZE, playerCam)
     end
+
+    renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
 
     renderer:addPostProcessingEffects(
         ssao,
@@ -94,20 +106,10 @@ function Game:enter(from, ...)
 
     renderer:addLights(ambient, light, light2)
 
-    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
-    local irradianceTexture = love.graphics.newImage("assets/images/environment_irradiance.dds")
-    local radianceTexture = love.graphics.newImage("assets/images/environment_radiance.dds")
-    renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
-    renderer.environmentRadianceMap = CubemapUtils.equirectangularMapToCubeMap(radianceTexture, "rg11b10f")
-    renderer.irradianceMap = CubemapUtils.equirectangularMapToCubeMap(irradianceTexture, "rg11b10f")
-
-    -- renderer.irradianceMap = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
-    -- renderer.environmentRadianceMap = CubemapUtils.getEnvironmentRadianceMap(renderer.skyBoxTexture)
-
 
     myModel = Model("assets/models/untitled.gltf", {
         materials = {
-            default = PBRMaterial()
+            default = defaultMaterial
         },
         triangulate = true,
         flipUVs = true,
@@ -163,7 +165,7 @@ function Game:draw()
         love.graphics.setMeshCullMode("front")
         love.graphics.setShader(cubeShader)
 
-        for c, config in ipairs(renderer.meshParts) do
+        for c, config in ipairs(renderer.meshParts) do ---@diagnostic disable-line: invisible
             local min, max = config.meshPart.aabb:getMinMaxTransformed(config.worldMatrix)
             local worldMatrix = Matrix.CreateScale((max - min) / 2) * Matrix.CreateTranslation((min + max) * 0.5)
 

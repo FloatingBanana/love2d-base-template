@@ -196,7 +196,7 @@ function DebugDisplay:update(dt)
 
                         if effect.ClassName == "HDR" then ---@cast effect HDR
                             if Imgui.SliderFloat("Exposure", fillPointer(floatPtr, effect.exposure), 0, 5) then
-                                effect:setExposure(floatPtr[0])
+                                effect.exposure = floatPtr[0]
                             end
                         end
 
