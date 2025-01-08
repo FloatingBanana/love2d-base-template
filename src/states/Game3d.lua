@@ -1,12 +1,14 @@
 local Game = {}
 
-local Matrix           = require "engine.math.matrix"
+local Matrix4          = require "engine.math.matrix4"
 local Vector3          = require "engine.math.vector3"
+local Vector2          = require "engine.math.vector2"
 local Quaternion       = require "engine.math.quaternion"
 local InputHelper      = require "engine.misc.inputHelper"
 local Model            = require "engine.3D.model.model"
 local Camera           = require "engine.misc.camera3d"
 local CubemapUtils     = require "engine.misc.cubemapUtils"
+local SH9Color         = require "engine.math.SH9Color"
 local Lume             = require "engine.3rdparty.lume"
 
 local PointLight       = require "engine.3D.lights.pointLight"
@@ -75,15 +77,18 @@ local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50))
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(true)
 
-    local environmentTexture = love.graphics.newImage("assets/images/environment.exr")
-    local irradianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_irradiance.dds"), "rg11b10f")
-    local radianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_radiance.dds"), "rg11b10f")
+    local environmentTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment.exr"), "rgba16f")
+    -- local irradianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_irradiance.dds"), "rg11b10f")
+    -- local radianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_radiance.dds"), "rg11b10f")
 
-    -- local irradianceTexture = CubemapUtils.getIrradianceMap(renderer.skyBoxTexture)
-    -- local radianceTexture = CubemapUtils.getEnvironmentRadianceMap(renderer.skyBoxTexture)
+    local irradianceTexture = CubemapUtils.getIrradianceMap(environmentTexture, Vector2(32))
+    local radianceTexture = CubemapUtils.environmentRadianceMap(environmentTexture, Vector2(128))
 
 
-    local defaultMaterial = PBRMaterial(irradianceTexture, radianceTexture)
+    -- local irrSH = SH9Color.CreateFromEquirectangularMap(love.image.newImageData("assets/images/environment_irradiance.dds"))
+    local irrSH = SH9Color.CreateFromCubeMap(irradianceTexture)
+
+    local defaultMaterial = PBRMaterial(irrSH.coefficients, radianceTexture)
 
     if useDeferredRendering then
         renderer = DeferredRenderer(SCREENSIZE, playerCam, defaultMaterial)
@@ -91,7 +96,7 @@ function Game:enter(from, ...)
         renderer = ForwardRenderer(SCREENSIZE, playerCam)
     end
 
-    renderer.skyBoxTexture = CubemapUtils.equirectangularMapToCubeMap(environmentTexture, "rg11b10f")
+    renderer.skyBoxTexture = environmentTexture
 
     renderer:addPostProcessingEffects(
         ssao,
@@ -129,7 +134,7 @@ function Game:draw()
             config.material = part.material
 
             if name == "Drawer" then
-                config.worldMatrix = mesh:getGlobalMatrix()-- * Matrix.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
+                config.worldMatrix = mesh:getGlobalMatrix()-- * Matrix4.CreateFromYawPitchRoll(love.timer.getTime(), 0, 0)
             else
                 config.worldMatrix = mesh:getGlobalMatrix()
             end
@@ -167,7 +172,7 @@ function Game:draw()
 
         for c, config in ipairs(renderer.meshParts) do ---@diagnostic disable-line: invisible
             local min, max = config.meshPart.aabb:getMinMaxTransformed(config.worldMatrix)
-            local worldMatrix = Matrix.CreateScale((max - min) / 2) * Matrix.CreateTranslation((min + max) * 0.5)
+            local worldMatrix = Matrix4.CreateScale((max - min) / 2) * Matrix4.CreateTranslation((min + max) * 0.5)
 
             cubeShader:send("u_viewProj", "column", (worldMatrix * playerCam.viewPerspectiveMatrix):toFlatTable())
             love.graphics.draw(CubemapUtils.cubeMesh)
