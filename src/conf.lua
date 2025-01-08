@@ -11,7 +11,7 @@ CENTERPOS = Vector2(CENTERX, CENTERY)
 function love.conf(t)
     t.identity = nil
     t.appendidentity = false
-    t.version = "11.3"
+    t.version = "11.4"
     t.console = false
     t.accelerometerjoystick = true
     t.externalstorage = false
@@ -31,7 +31,7 @@ function love.conf(t)
     t.window.fullscreen = false
     t.window.fullscreentype = "desktop"
     t.window.vsync = 0
-    t.window.msaa = 4
+    t.window.msaa = 0
     t.window.depth = 16
     t.window.stencil = nil
     t.window.display = 1
