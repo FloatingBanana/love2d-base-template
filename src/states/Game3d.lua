@@ -127,6 +127,7 @@ end
 
 function Game:draw()
     love.graphics.draw(renderer:render())
+    renderer:clearMeshParts()
 
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
