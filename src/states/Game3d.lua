@@ -23,6 +23,8 @@ local PhongMaterial    = require "engine.3D.materials.phongMaterial"
 local PBRMaterial      = require "engine.3D.materials.PBRMaterial"
 local ToonMaterial     = require "engine.3D.materials.toonMaterial"
 
+local IrradianceVolume = require "engine.3D.renderers.irradianceVolume"
+
 local SSAOClass        = require "engine.postProcessing.ssao"
 local BloomClass       = require "engine.postProcessing.bloom"
 local HDRClass         = require "engine.postProcessing.hdr"
@@ -53,7 +55,7 @@ local myModel = nil ---@type Model
 local personAnimator = nil --- @type ModelAnimator
 
 local showAABB = false
-local useDeferredRendering = true
+local useDeferredRendering = false
 
 
 -- Post processing effects
@@ -74,6 +76,8 @@ local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5)
 local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50)):setShadowMapping(512, false)
 -- local light3 = DirectionalLight(Vector3(-1, 1,-1), -Vector3(1,-1, 1):normalize(), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
 
+local irrVolume = IrradianceVolume(Matrix4.CreateTransformationMatrix(Quaternion.Identity(), Vector3(15,3,15), Vector3(0,1,0)), 32, Vector3(1), Vector2(0.1, 100))
+
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(true)
 
@@ -81,14 +85,12 @@ function Game:enter(from, ...)
     -- local irradianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_irradiance.dds"), "rg11b10f")
     -- local radianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_radiance.dds"), "rg11b10f")
 
-    local irradianceTexture = CubemapUtils.getIrradianceMap(environmentTexture, Vector2(32))
     local radianceTexture = CubemapUtils.environmentRadianceMap(environmentTexture, Vector2(128))
 
 
     -- local irrSH = SH9Color.CreateFromEquirectangularMap(love.image.newImageData("assets/images/environment_irradiance.dds"))
-    local irrSH = SH9Color.CreateFromCubeMap(irradianceTexture)
 
-    local defaultMaterial = PBRMaterial(irrSH.coefficients, radianceTexture)
+    local defaultMaterial = PBRMaterial(radianceTexture)
 
     if useDeferredRendering then
         renderer = DeferredRenderer(SCREENSIZE, playerCam, defaultMaterial)
@@ -123,6 +125,37 @@ function Game:enter(from, ...)
 
     personAnimator = myModel.animations["running"]:getNewAnimator(myModel.armatures.Armature, myModel.nodes.Person:getGlobalMatrix())
     personAnimator:play()
+
+
+    irrVolume.renderer.skyBoxTexture = environmentTexture
+
+    local lv = IrradianceVolume(Matrix4.Identity(), 1, Vector3(1), Vector2(0.1, 100))
+    lv:mapProbes(function (probe, index)
+        return
+            (SH9Color.ProjectDirection(Vector3(1,0,0)):multiply(Vector3(30)) +
+            SH9Color.ProjectDirection(Vector3(-1,0,0)):multiply(Vector3(30)) +
+            SH9Color.ProjectDirection(Vector3(0,1,0)):multiply(Vector3(30)) +
+            SH9Color.ProjectDirection(Vector3(0,-1,0)):multiply(Vector3(30)) +
+            SH9Color.ProjectDirection(Vector3(0,0,1)):multiply(Vector3(30)) +
+            SH9Color.ProjectDirection(Vector3(0,0,-1)):multiply(Vector3(30))) * (1/6)
+    end)
+
+    irrVolume.renderer:addLights(ambient)
+
+    myModel.contentLoader:loadAll()
+    for name, mesh in pairs(myModel.meshes) do
+        for i, part in ipairs(mesh.parts) do
+            local config = irrVolume.renderer:pushMeshPart(part)
+            config.worldMatrix = mesh:getGlobalMatrix()
+
+            part.material.environmentRadianceMap = radianceTexture
+            part.material.irradianceVolumeProbeBuffer = lv.probeBuffer
+            part.material.irradianceVolumeInvTransform = lv.transform.inverse
+            part.material.irradianceVolumeGridSize = lv.gridSize
+        end
+    end
+
+    irrVolume:bake()
 end
 
 function Game:draw()
@@ -148,6 +181,10 @@ function Game:draw()
                 config.castShadows = false
                 config.ignoreLighting = true
             end
+
+            part.material.irradianceVolumeProbeBuffer = irrVolume.probeBuffer
+            part.material.irradianceVolumeInvTransform = irrVolume.transform.inverse
+            part.material.irradianceVolumeGridSize = irrVolume.gridSize
         end
     end
 
@@ -165,6 +202,35 @@ function Game:draw()
         end
     end
 
+
+
+    local neighbors = {irrVolume:getNeighborCells(playerCam.position)}
+
+    for i=1, #irrVolume.probes do
+        local cell = irrVolume:getCell(i)
+        local pos = irrVolume:getPositionFromCell(cell):worldToScreen(playerCam.viewPerspectiveMatrix, SCREENSIZE, 0, 1) ---@diagnostic disable-line: undefined-field
+
+        if pos.z > 0 and pos.z < 1 then
+            local z = 1 - pos.z
+
+            love.graphics.setColor(1,1,1,1)
+            for _, n in ipairs(neighbors) do
+                if n == cell then
+                    love.graphics.setColor(1,0,0,1)
+                    break
+                end
+            end
+
+            love.graphics.circle("fill", pos.x, pos.y, z*300)
+        end
+    end
+
+    love.graphics.setColor(1,1,1,1)
+
+    for i, n in ipairs(neighbors) do
+        love.graphics.print(tostring(n), 10, 10 + i * 20)
+    end
+
     if showAABB then
         love.graphics.push("all")
         love.graphics.setWireframe(true)
@@ -178,6 +244,13 @@ function Game:draw()
             cubeShader:send("u_viewProj", "column", (worldMatrix * playerCam.viewPerspectiveMatrix):toFlatTable())
             love.graphics.draw(CubemapUtils.cubeMesh)
         end
+
+
+        for i=1, #irrVolume.probes do
+            cubeShader:send("u_viewProj", "column", (Matrix4.CreateTransformationMatrix(Quaternion.Identity(), irrVolume.gridSize.inverse * 0.5, irrVolume:getCell(i) / irrVolume.gridSize + irrVolume.gridSize.inverse * 0.5 - 0.5) * irrVolume.transform * playerCam.viewPerspectiveMatrix):toFlatTable())
+            love.graphics.draw(CubemapUtils.cubeMesh)
+        end
+
         love.graphics.pop()
     end
 end
