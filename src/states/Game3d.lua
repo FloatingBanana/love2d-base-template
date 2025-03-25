@@ -76,7 +76,8 @@ local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5)
 local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50)):setShadowMapping(512, false)
 -- local light3 = DirectionalLight(Vector3(-1, 1,-1), -Vector3(1,-1, 1):normalize(), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
 
-local irrVolume = IrradianceVolume(Matrix4.CreateTransformationMatrix(Quaternion.Identity(), Vector3(15,3,15), Vector3(0,1,0)), 32, Vector3(1), Vector2(0.1, 100))
+local environmentRenderer = ForwardRenderer(Vector2(32))
+local irrVolume = IrradianceVolume(Matrix4.CreateTransformationMatrix(Quaternion.Identity(), Vector3(1), Vector3(0,1,0)), Vector3(1))
 
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(true)
@@ -127,25 +128,17 @@ function Game:enter(from, ...)
     personAnimator:play()
 
 
-    irrVolume.renderer.skyBoxTexture = environmentTexture
+    environmentRenderer.skyBoxTexture = environmentTexture
 
-    local lv = IrradianceVolume(Matrix4.Identity(), 1, Vector3(1), Vector2(0.1, 100))
-    lv:mapProbes(function (probe, index)
-        return
-            (SH9Color.ProjectDirection(Vector3(1,0,0)):multiply(Vector3(30)) +
-            SH9Color.ProjectDirection(Vector3(-1,0,0)):multiply(Vector3(30)) +
-            SH9Color.ProjectDirection(Vector3(0,1,0)):multiply(Vector3(30)) +
-            SH9Color.ProjectDirection(Vector3(0,-1,0)):multiply(Vector3(30)) +
-            SH9Color.ProjectDirection(Vector3(0,0,1)):multiply(Vector3(30)) +
-            SH9Color.ProjectDirection(Vector3(0,0,-1)):multiply(Vector3(30))) * (1/6)
-    end)
+    local lv = IrradianceVolume(Matrix4.Identity(), Vector3(1))
+    lv:bakeFromSolidColor(Vector3(1,1,1))
 
-    irrVolume.renderer:addLights(ambient)
+    environmentRenderer:addLights(ambient)
 
     myModel.contentLoader:loadAll()
     for name, mesh in pairs(myModel.meshes) do
         for i, part in ipairs(mesh.parts) do
-            local config = irrVolume.renderer:pushMeshPart(part)
+            local config = environmentRenderer:pushMeshPart(part)
             config.worldMatrix = mesh:getGlobalMatrix()
 
             part.material.environmentRadianceMap = radianceTexture
@@ -155,11 +148,12 @@ function Game:enter(from, ...)
         end
     end
 
-    irrVolume:bake()
+    irrVolume:bake(environmentRenderer, 0.1, 100)
+    environmentRenderer:clearMeshParts()
 end
 
 function Game:draw()
-    love.graphics.draw(renderer:render())
+    love.graphics.draw(renderer:render(playerCam))
     renderer:clearMeshParts()
 
     for name, mesh in pairs(myModel.meshes) do
@@ -296,7 +290,7 @@ end
 
 function Game:keypressed(key)
     if key == "f1" then
-        GS.push(DebugDisplayState, {renderer = renderer, model = myModel, graphicsStatsInfo = graphicsStatsInfo})
+        GS.push(DebugDisplayState, {renderer = renderer, camera = playerCam, model = myModel, graphicsStatsInfo = graphicsStatsInfo})
     end
 
     if key == "f2" then

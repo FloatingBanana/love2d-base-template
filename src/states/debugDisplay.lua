@@ -74,12 +74,12 @@ function DebugDisplay:update(dt)
 
                 Imgui.SeparatorText("Camera")
 
-                if Imgui.InputFloat3("Position", fillPointer(floatPtr, debugData.renderer.camera.position:split())) then
-                    debugData.renderer.camera.position = Vector3(floatPtr[0], floatPtr[1], floatPtr[2])
+                if Imgui.InputFloat3("Position", fillPointer(floatPtr, debugData.camera.position:split())) then
+                    debugData.camera.position = Vector3(floatPtr[0], floatPtr[1], floatPtr[2])
                 end
 
-                if Imgui.SliderFloat("Field of view", fillPointer(floatPtr, math.deg(debugData.renderer.camera.fov)), 0, 180) then
-                    debugData.renderer.camera.fov = math.rad(floatPtr[0])
+                if Imgui.SliderFloat("Field of view", fillPointer(floatPtr, math.deg(debugData.camera.fov)), 0, 180) then
+                    debugData.camera.fov = math.rad(floatPtr[0])
                 end
 
                 Imgui.Separator()
