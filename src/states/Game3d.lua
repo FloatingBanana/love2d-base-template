@@ -23,7 +23,8 @@ local PhongMaterial    = require "engine.3D.materials.phongMaterial"
 local PBRMaterial      = require "engine.3D.materials.PBRMaterial"
 local ToonMaterial     = require "engine.3D.materials.toonMaterial"
 
-local IrradianceVolume = require "engine.3D.renderers.irradianceVolume"
+local IrradianceVolume = require "engine.3D.irradianceVolume"
+local ReflectionProbe  = require "engine.3D.reflectionProbe"
 
 local SSAOClass        = require "engine.postProcessing.ssao"
 local BloomClass       = require "engine.postProcessing.bloom"
@@ -76,27 +77,21 @@ local light = SpotLight(Vector3(0), Vector3(0,0,1), math.rad(17), math.rad(25.5)
 local light2 = PointLight(Vector3(0), 0, 0, 1, Color(50,50,50), Color(50,50,50)):setShadowMapping(512, false)
 -- local light3 = DirectionalLight(Vector3(-1, 1,-1), -Vector3(1,-1, 1):normalize(), Color(1,1,1), Color(1,1,1)):setShadowMapping(2048, false)
 
-local environmentRenderer = ForwardRenderer(Vector2(32))
+local environmentRenderer = ForwardRenderer(Vector2(256))
 local irrVolume = IrradianceVolume(Matrix4.CreateTransformationMatrix(Quaternion.Identity(), Vector3(1), Vector3(0,1,0)), Vector3(1))
+local reflProbe = ReflectionProbe(Vector3(0,1,0))
 
 function Game:enter(from, ...)
     love.mouse.setRelativeMode(true)
 
     local environmentTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment.exr"), "rgba16f")
-    -- local irradianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_irradiance.dds"), "rg11b10f")
-    -- local radianceTexture = CubemapUtils.equirectangularMapToCubeMap(love.graphics.newImage("assets/images/environment_radiance.dds"), "rg11b10f")
-
-    local radianceTexture = CubemapUtils.environmentRadianceMap(environmentTexture, Vector2(128))
-
-
-    -- local irrSH = SH9Color.CreateFromEquirectangularMap(love.image.newImageData("assets/images/environment_irradiance.dds"))
-
-    local defaultMaterial = PBRMaterial(radianceTexture)
+    local defaultRadianceTexture = CubemapUtils.environmentRadianceMap(environmentTexture, Vector2(128))
+    local defaultMaterial = PBRMaterial()
 
     if useDeferredRendering then
-        renderer = DeferredRenderer(SCREENSIZE, playerCam, defaultMaterial)
+        renderer = DeferredRenderer(SCREENSIZE, defaultMaterial)
     else
-        renderer = ForwardRenderer(SCREENSIZE, playerCam)
+        renderer = ForwardRenderer(SCREENSIZE)
     end
 
     renderer.skyBoxTexture = environmentTexture
@@ -141,15 +136,18 @@ function Game:enter(from, ...)
             local config = environmentRenderer:pushMeshPart(part)
             config.worldMatrix = mesh:getGlobalMatrix()
 
-            part.material.environmentRadianceMap = radianceTexture
+            part.material.environmentRadianceMap = defaultRadianceTexture
             part.material.irradianceVolumeProbeBuffer = lv.probeBuffer
             part.material.irradianceVolumeInvTransform = lv.transform.inverse
             part.material.irradianceVolumeGridSize = lv.gridSize
         end
     end
 
-    irrVolume:bake(environmentRenderer, 0.1, 100)
+    irrVolume:bake(environmentRenderer, 0.01, 100)
+    reflProbe:bake(environmentRenderer, 0.01, 100)
     environmentRenderer:clearMeshParts()
+
+    defaultMaterial.environmentRadianceMap = reflProbe.reflectionMap
 end
 
 function Game:draw()
@@ -176,6 +174,7 @@ function Game:draw()
                 config.ignoreLighting = true
             end
 
+            part.material.environmentRadianceMap = reflProbe.reflectionMap
             part.material.irradianceVolumeProbeBuffer = irrVolume.probeBuffer
             part.material.irradianceVolumeInvTransform = irrVolume.transform.inverse
             part.material.irradianceVolumeGridSize = irrVolume.gridSize
