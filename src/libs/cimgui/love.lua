@@ -15,9 +15,9 @@ local vertexformat
 local major, minor = love.getVersion()
 if major == 12 then
     vertexformat = {
-        {name="VertexPosition", format="floatvec2"},
-        {name="VertexTexCoord", format="floatvec2"},
-        {name="VertexColor", format="unorm8vec4"}
+        {location=0, format="floatvec2"},
+        {location=1, format="floatvec2"},
+        {location=2, format="unorm8vec4"}
     }
 elseif major == 11 then
     vertexformat = {
@@ -154,7 +154,7 @@ _common.textures = setmetatable({},{__mode="v"})
 _common.callbacks = setmetatable({},{__mode="v"})
 
 local cliboard_callback_get, cliboard_callback_set
-local io
+local io, platform_io
 
 local Alpha8_shader
 
@@ -169,6 +169,7 @@ function L.Init(format)
     format = format or "RGBA32"
     C.igCreateContext(nil)
     io = C.igGetIO()
+    platform_io = C.igGetPlatformIO()
     L.BuildFontAtlas(format)
 
     cliboard_callback_get = ffi.cast("const char* (*)(void*)", function(userdata)
@@ -178,8 +179,8 @@ function L.Init(format)
         love.system.setClipboardText(ffi.string(text))
     end)
 
-    io.GetClipboardTextFn = cliboard_callback_get
-    io.SetClipboardTextFn = cliboard_callback_set
+    platform_io.Platform_GetClipboardTextFn = cliboard_callback_get
+    platform_io.Platform_SetClipboardTextFn = cliboard_callback_set
 
     local dpiscale = love.window.getDPIScale()
     io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y = dpiscale, dpiscale
@@ -246,8 +247,9 @@ local cursors = {
     [C.ImGuiMouseCursor_NotAllowed] = love.mouse.getSystemCursor("no"),
 }
 
-local mesh, meshdata
+local mesh, meshdata, idx_buffer
 local max_vertexcount = -math.huge
+local max_indexcount = -math.huge
 
 function L.RenderDrawLists()
     -- Avoid rendering when minimized
@@ -273,7 +275,7 @@ function L.RenderDrawLists()
         local cmd_list = data.CmdLists.Data[i]
 
         local vertexcount = cmd_list.VtxBuffer.Size
-        local data_size = vertexcount*ffi.sizeof("ImDrawVert")
+        local data_size = vertexcount * ffi.sizeof("ImDrawVert")
         if vertexcount > max_vertexcount then
             max_vertexcount = vertexcount
             if mesh then mesh:release() end
@@ -286,11 +288,17 @@ function L.RenderDrawLists()
             mesh:setVertices(meshdata)
         end
 
-        local IdxBuffer = {}
-        for k = 1, cmd_list.IdxBuffer.Size do
-            IdxBuffer[k] = cmd_list.IdxBuffer.Data[k - 1] + 1
+        local indices_data_size = cmd_list.IdxBuffer.Size * ffi.sizeof("ImDrawIdx")
+
+        if cmd_list.IdxBuffer.Size > max_indexcount then
+            max_indexcount = cmd_list.IdxBuffer.Size
+            if idx_buffer then idx_buffer:release() end
+            idx_buffer = love.data.newByteData(math.max(indices_data_size, ffi.sizeof("ImDrawIdx")))
         end
-        mesh:setVertexMap(IdxBuffer)
+
+        ffi.copy(idx_buffer:getFFIPointer(), cmd_list.IdxBuffer.Data, indices_data_size)
+
+        mesh:setVertexMap(idx_buffer, "uint16")
 
         for k = 0, cmd_list.CmdBuffer.Size - 1 do
             local cmd = cmd_list.CmdBuffer.Data[k]
@@ -305,7 +313,7 @@ function L.RenderDrawLists()
                 love.graphics.setBlendMode("alpha", "alphamultiply")
 
                 local texture_id = C.ImDrawCmd_GetTexID(cmd)
-                if texture_id ~= nil then
+                if texture_id ~= 0 then
                     local obj = _common.textures[tostring(texture_id)]
                     local status, value = pcall(love_texture_test, obj)
                     assert(status and value, "Only LÖVE Texture objects can be passed as ImTextureID arguments.")
